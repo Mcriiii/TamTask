@@ -1,0 +1,31 @@
+
+  /* Top Navbar */
+  .top-navbar {
+  height: 80px;
+  width: 100%;
+  background: linear-gradient(to right, #009900, #009900cf);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  font-size: 18px;
+  box-shadow: 0 5px 10px rgba(255, 255, 255, 0.5); /* <-- white shadow added */
+  }
+
+
+  .logo-nav{
+    height: 80px; /* you can adjust this */
+    width: auto;
+    object-fit: contain;
+  }
+
+
+  .user-greeting {
+    font-weight: normal;
+  }
+
+
+  img {
+    display: block; /* removes extra space below image */
+  }
