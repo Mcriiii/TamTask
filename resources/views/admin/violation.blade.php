@@ -246,7 +246,7 @@
             @csrf
             @method('PUT')
             <div class="modal-header">
-                <h5 class="modal-title" id="editViolationModalLabel">Edit Violation Report</h5>
+                <h5 class="modal-title">Edit Violation Report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -305,7 +305,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Action Taken (Optional)</label>
+                    <label class="form-label">Action Taken</label>
                     <select name="action_taken" id="editActionTaken" class="form-select">
                         <option value="">-- None --</option>
                         <option value="Warning">Warning</option>
@@ -325,44 +325,40 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Other codes...
-
-        $('.edit-btn').on('click', function() {
-            $('#editId').val($(this).data('id'));
-            $('#editViolationNo').val($(this).data('violation_no'));
-            $('#editFullName').val($(this).data('full_name'));
-            $('#editStudentNo').val($(this).data('student_no'));
-            $('#editStudentEmail').val($(this).data('student_email'));
-            $('#editDateReported').val($(this).data('date_reported'));
-            $('#editYearlvlDegree').val($(this).data('yearlvl_degree'));
-
-            // Select2 for Offense (Important: trigger 'change' for select2 to update)
-            $('#editOffense').val($(this).data('offense')).trigger('change');
-
-            $('#editLevel').val($(this).data('level'));
-            $('#editStatus').val($(this).data('status'));
-            $('#editActionTaken').val($(this).data('action_taken'));
-        });
-
-        // Setup Select2 for both modals
+    $(document).ready(function () {
+        // Init select2
         $('.select2').select2({
             dropdownParent: $('#addViolationModal')
         });
-
         $('#editOffense').select2({
             dropdownParent: $('#editViolationModal')
         });
 
-        // Form Submit for Edit
-        $('#editViolationForm').on('submit', function(e) {
+        // Auto-fill Edit Modal
+        $('.edit-btn').on('click', function () {
+            $('#editId').val($(this).data('id'));
+            $('#editViolationNo').val($(this).data('violationNo'));
+            $('#editFullName').val($(this).data('fullName'));
+            $('#editStudentNo').val($(this).data('studentNo'));
+            $('#editStudentEmail').val($(this).data('studentEmail'));
+            $('#editDateReported').val($(this).data('dateReported'));
+            $('#editYearlvlDegree').val($(this).data('yearlvlDegree'));
+            $('#editOffense').val($(this).data('offense')).trigger('change');
+            $('#editLevel').val($(this).data('level'));
+            $('#editStatus').val($(this).data('status'));
+            $('#editActionTaken').val($(this).data('actionTaken'));
+        });
+
+        // Form submission routing
+        $('#editViolationForm').on('submit', function (e) {
             e.preventDefault();
-            var id = $('#editId').val();
-            var url = "{{ url($prefix.'violations') }}/" + id;
-            $(this).attr('action', url);
+            const id = $('#editId').val();
+            const action = "{{ url($prefix.'violations') }}/" + id;
+            $(this).attr('action', action);
             this.submit();
         });
     });
 </script>
+
 
 @endsection
