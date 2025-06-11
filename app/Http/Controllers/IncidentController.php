@@ -32,8 +32,7 @@ class IncidentController extends Controller
         }
 
         $incidents = $query->latest()->paginate(10);
-       return view('incident', compact('incidents'));
-
+        return view('incident', compact('incidents'));
     }
 
     public function store(Request $request)
@@ -57,9 +56,7 @@ class IncidentController extends Controller
     public function edit($id)
     {
         $incident = Incident::findOrFail($id);
-        return response()->json([
-            'html' => view('partials.incident_edit_form', compact('incident'))->render()
-        ]);
+        return response()->json($incident);
     }
 
     public function update(Request $request, $id)

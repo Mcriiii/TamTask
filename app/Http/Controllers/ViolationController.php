@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -33,27 +34,66 @@ class ViolationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'violation_no' => 'required|unique:violations,violation_no',
-            'full_name' => 'required',
-            'student_no' => 'required',
-            'student_email' => 'required|email',
+            'full_name' => 'required|string|max:255',
+            'student_no' => 'required|string|max:50',
+            'student_email' => 'required|email|max:255',
             'date_reported' => 'required|date',
-            'yearlvl_degree' => 'required',
-            'offense' => 'required',
+            'yearlvl_degree' => 'required|string|max:255',
+            'offense' => 'required|string',
             'status' => 'required|in:Pending,Complete',
         ]);
 
-        $data = $request->all();
-        $data['level'] = $this->determineLevel($data['offense']);
-        Violation::create($data);
+        $violationNo = 'VIO-' . rand(1000, 9999);
 
-        return redirect()->route('admin.violations.index')->with('success', 'Violation added.');
+        Violation::create([
+            'violation_no' => $violationNo,
+            'full_name' => $request->full_name,
+            'student_no' => $request->student_no,
+            'student_email' => $request->student_email,
+            'date_reported' => $request->date_reported,
+            'yearlvl_degree' => $request->yearlvl_degree,
+            'offense' => $request->offense,
+            'level' => $this->determineLevel($request->offense),
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('violations.index')->with('success', 'Violation report submitted successfully!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $violation = Violation::findOrFail($id);
+
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'student_no' => 'required|string|max:50',
+            'student_email' => 'required|email|max:255',
+            'date_reported' => 'required|date',
+            'yearlvl_degree' => 'required|string|max:255',
+            'offense' => 'required|string',
+            'status' => 'required|in:Pending,Complete',
+        ]);
+
+        $violation->update([
+            'full_name' => $request->full_name,
+            'student_no' => $request->student_no,
+            'student_email' => $request->student_email,
+            'date_reported' => $request->date_reported,
+            'yearlvl_degree' => $request->yearlvl_degree,
+            'offense' => $request->offense,
+            'level' => $this->determineLevel($request->offense),
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('violations.index')->with('success', 'Violation updated successfully.');
     }
 
     public function destroy($id)
     {
-        Violation::findOrFail($id)->delete();
-        return redirect()->route('admin.violations.index')->with('success', 'Violation deleted.');
+        $violation = Violation::findOrFail($id);
+        $violation->delete();
+
+        return redirect()->route('violations.index')->with('success', 'Violation deleted successfully.');
     }
 
     private function determineLevel($offense)

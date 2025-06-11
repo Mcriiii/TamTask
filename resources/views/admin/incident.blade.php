@@ -4,19 +4,17 @@
 @php
     $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 @endphp
-<!-- Top Navbar -->
 <div class="top-navbar">
     <img src="{{ asset('images/logoo.png') }}" alt="" class="logo-nav">
     <div class="user-greeting">
-    @if(Auth::check())
-        Hello, {{ Auth::user()->first_name }}
-    @else
-        Hello, Guest
-    @endif
+        @if(Auth::check())
+            Hello, {{ Auth::user()->first_name }}
+        @else
+            Hello, Guest
+        @endif
     </div>
 </div>
 
-<!-- Sidebar + Content -->
 <div class="main-wrapper">
     @include('layout.sidebar')
 
@@ -30,8 +28,7 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    {{-- Filter --}}
-                    <form method="GET" action="{{ route($prefix .$prefix .'incidents.index') }}" class="row g-3 mb-4">
+                    <form method="GET" action="{{ route($prefix . 'incidents.index') }}" class="row g-3 mb-4">
                         <div class="col-md-4">
                             <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, ticket, or incident">
                         </div>
@@ -53,15 +50,10 @@
                         </div>
                     </form>
 
-                    {{-- Success Message --}}
                     @if(session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
 
-                    {{-- Incident Table --}}
-                    @if($incidents->isEmpty())
-                        <p>No incident reports found.</p>
-                    @else
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped align-middle">
                             <thead class="table-dark">
@@ -92,7 +84,17 @@
                                         {{ $incident->status }}
                                     </td>
                                     <td>
-                                        <form action="{{ route($prefix .'incidents.destroy', $incident->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this report?');">
+                                        <button type="button" class="btn btn-sm btn-warning me-1"
+                                            data-bs-toggle="modal" data-bs-target="#editIncidentModal"
+                                            data-id="{{ $incident->id }}"
+                                            data-incident="{{ $incident->incident }}"
+                                            data-reporter="{{ $incident->reporter_name }}"
+                                            data-date="{{ $incident->date_reported }}"
+                                            data-role="{{ $incident->reporter_role }}"
+                                            data-status="{{ $incident->status }}">
+                                            Edit
+                                        </button>
+                                        <form action="{{ route($prefix .'incidents.destroy', $incident->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-sm btn-danger">
@@ -106,27 +108,23 @@
                         </table>
                     </div>
                     {{ $incidents->withQueryString()->links() }}
-                    @endif
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Incident Modal -->
-<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true">
+<!-- Edit Modal -->
+<div class="modal fade" id="editIncidentModal" tabindex="-1" aria-labelledby="editIncidentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route($prefix .'incidents.store') }}" method="POST" class="modal-content">
+        <form method="POST" id="editIncidentForm" class="modal-content">
             @csrf
+            @method('PUT')
             <div class="modal-header">
-                <h5 class="modal-title" id="addIncidentModalLabel">Add Incident Report</h5>
+                <h5 class="modal-title">Edit Incident</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Ticket No.</label>
-                    <input type="text" name="ticket_no" class="form-control" value="{{ 'INC-' . strtoupper(uniqid()) }}" readonly>
-                </div>
                 <div class="mb-3">
                     <label class="form-label">Incident Description</label>
                     <textarea name="incident" class="form-control" required></textarea>
@@ -155,11 +153,30 @@
                         <option value="Complete">Complete</option>
                     </select>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-danger">Submit</button>
+                <div class="text-end">
+                    <button class="btn btn-danger">Update</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editModal = document.getElementById('editIncidentModal');
+    editModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const form = editModal.querySelector('#editIncidentForm');
+
+        const id = button.getAttribute('data-id');
+        form.action = `/{{ $prefix }}incidents/update/${id}`;
+
+        form.querySelector('[name="incident"]').value = button.getAttribute('data-incident');
+        form.querySelector('[name="reporter_name"]').value = button.getAttribute('data-reporter');
+        form.querySelector('[name="date_reported"]').value = button.getAttribute('data-date');
+        form.querySelector('[name="reporter_role"]').value = button.getAttribute('data-role');
+        form.querySelector('[name="status"]').value = button.getAttribute('data-status');
+    });
+});
+</script>
 @endsection
