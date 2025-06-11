@@ -10,6 +10,7 @@ use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ViolationController;
+use App\Http\Controllers\CertificateController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -42,17 +43,12 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::put('/incidents/update/{id}', [IncidentController::class, 'update'])->name('incidents.update');
     Route::delete('/incidents/delete/{id}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
 
-
-
     // Violation Routes
     Route::get('/violations', [ViolationController::class, 'index'])->name('violations.index');
-    Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store'); // <--- THIS
-    Route::get('/violations/{id}/edit', [ViolationController::class, 'edit'])->name('violations.edit');
-    Route::put('/violations/{id}', [ViolationController::class, 'update'])->name('violations.update');
-    Route::delete('/violations/{id}', [ViolationController::class, 'destroy'])->name('violations.destroy');
-
-
-
+    Route::post('/violations/store', [ViolationController::class, 'store'])->name('violations.store');
+    Route::get('/violations/edit/{id}', [ViolationController::class, 'edit'])->name('violations.edit');
+    Route::put('/violations/update/{id}', [ViolationController::class, 'update'])->name('violations.update');
+    Route::delete('/violations/delete/{id}', [ViolationController::class, 'destroy'])->name('violations.destroy');
 
 
     // Referral Routes
@@ -93,16 +89,12 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::put('/incidents/update/{id}', [IncidentController::class, 'update'])->name('admin.incidents.update');
     Route::delete('/incidents/delete/{id}', [IncidentController::class, 'destroy'])->name('admin.incidents.destroy');
 
-
     // Violation Routes
     Route::get('/violations', [ViolationController::class, 'index'])->name('admin.violations.index');
-    Route::post('/violations', [ViolationController::class, 'store'])->name('admin.violations.store'); // <--- THIS
-    Route::get('/violations/{id}/edit', [ViolationController::class, 'edit'])->name('admin.violations.edit');
-    Route::put('/violations/{id}', [ViolationController::class, 'update'])->name('admin.violations.update');
-    Route::delete('/violations/{id}', [ViolationController::class, 'destroy'])->name('admin.violations.destroy');
-
-
-
+    Route::post('/violations/store', [ViolationController::class, 'store'])->name('admin.violations.store');
+    Route::get('/violations/edit/{id}', [ViolationController::class, 'edit'])->name('admin.violations.edit');
+    Route::put('/violations/update/{id}', [ViolationController::class, 'update'])->name('admin.violations.update');
+    Route::delete('/violations/delete/{id}', [ViolationController::class, 'destroy'])->name('admin.violations.destroy');
 
 
     // Referral Routes
@@ -111,6 +103,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::get('/referrals/edit/{id}', [ReferralController::class, 'edit'])->name('admin.referrals.edit');
     Route::put('/referrals/update/{id}', [ReferralController::class, 'update'])->name('admin.referrals.update');
     Route::delete('/referrals/delete/{id}', [ReferralController::class, 'destroy'])->name('admin.referrals.destroy');
+
     // Export Analytics for Admin
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('admin.pdf.export');
 
