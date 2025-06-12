@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LostFound;
+use Illuminate\Support\Facades\Auth;
 
 class LostFoundController extends Controller
 {
@@ -15,8 +16,8 @@ class LostFoundController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('reporter_name', 'like', "%{$search}%")
-                  ->orWhere('ticket_no', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('ticket_no', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -27,7 +28,8 @@ class LostFoundController extends Controller
         $reports = $query->latest()->paginate(10);
         $itemTypes = LostFound::select('item_type')->distinct()->pluck('item_type');
 
-        return view('lostandfound', compact('reports', 'itemTypes'));
+        $view = Auth::user()->role === 'admin' ? 'admin.lostandfound' : 'lostandfound';
+        return view($view, compact('reports', 'itemTypes'));
     }
 
     public function store(Request $request)
@@ -55,7 +57,8 @@ class LostFoundController extends Controller
             'status' => 'Unclaimed',
         ]);
 
-        return redirect()->route('lost-found.index')->with('success', 'Report submitted successfully!');
+        return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
+            ->with('success', 'Report submitted successfully!');
     }
 
     public function update(Request $request, $id)
@@ -74,7 +77,8 @@ class LostFoundController extends Controller
 
         $report->update($request->all());
 
-        return redirect()->route('lost-found.index')->with('success', 'Report updated successfully.');
+        return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
+            ->with('success', 'Report updated successfully.');
     }
 
     public function destroy($id)
@@ -82,7 +86,8 @@ class LostFoundController extends Controller
         $report = LostFound::findOrFail($id);
         $report->delete();
 
-        return redirect()->route('lost-found.index')->with('success', 'Report deleted successfully.');
+        return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
+            ->with('success', 'Report deleted successfully.');
     }
 
     public function markAsClaimed($id)
@@ -90,6 +95,15 @@ class LostFoundController extends Controller
         $report = LostFound::findOrFail($id);
         $report->update(['status' => 'Claimed']);
 
-        return redirect()->route('lost-found.index')->with('success', 'Item marked as claimed.');
+        return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
+            ->with('success', 'Item marked as claimed.');
+    }
+
+
+
+    protected function getRoutePrefix()
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'admin' ? 'admin.' : '';
     }
 }
