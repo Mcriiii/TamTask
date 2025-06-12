@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Violation;
 use Illuminate\Http\Request;
+use App\Models\Violation;
 
 class ViolationController extends Controller
 {
@@ -11,63 +11,81 @@ class ViolationController extends Controller
     {
         $query = Violation::query();
 
-        if ($request->search) {
-            $query->where('full_name', 'like', '%' . $request->search . '%')
-                ->orWhere('student_no', 'like', '%' . $request->search . '%')
-                ->orWhere('student_email', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('full_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('violation_no', 'like', '%' . $request->search . '%')
+                  ->orWhere('offense', 'like', '%' . $request->search . '%');
+            });
         }
 
-        if ($request->date_reported) {
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_reported')) {
             $query->whereDate('date_reported', $request->date_reported);
         }
 
-        $violations = $query->orderBy('date_reported', 'desc')->paginate(10);
-
+        $violations = $query->latest()->paginate(10);
         return view('violation', compact('violations'));
     }
 
-   public function store(Request $request)
-{
-    $validated = $request->validate([
-        'full_name' => 'required',
-        'student_no' => 'required',
-        'student_email' => 'required|email',
-        'date_reported' => 'required|date',
-        'yearlvl_degree' => 'required',
-        'offense' => 'required',
-        'level' => 'required|in:Minor,Major',
-        'status' => 'required|in:Pending,Complete',
-        'action_taken' => 'nullable|in:Warning,DUSAP,Suspension,Expulsion'
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'student_no' => 'required|string|max:50',
+            'student_email' => 'required|email|max:255',
+            'date_reported' => 'required|date',
+            'yearlvl_degree' => 'required|string|max:255',
+            'offense' => 'required|string',
+            'status' => 'required|in:Pending,Complete',
+        ]);
 
-    // Auto-generate Violation Number
-    $validated['violation_no'] = 'VIO-' . strtoupper(uniqid());
+        $violationNo = 'VIO-' . rand(1000, 9999);
 
-    Violation::create($validated);
+        Violation::create([
+            'violation_no' => $violationNo,
+            'full_name' => $request->full_name,
+            'student_no' => $request->student_no,
+            'student_email' => $request->student_email,
+            'date_reported' => $request->date_reported,
+            'yearlvl_degree' => $request->yearlvl_degree,
+            'offense' => $request->offense,
+            'level' => $this->determineLevel($request->offense),
+            'status' => $request->status,
+        ]);
 
-    return redirect()->route('violations.index')->with('success', 'Violation Report Added Successfully.');
-}
-
+        return redirect()->route('violations.index')->with('success', 'Violation report submitted successfully!');
+    }
 
     public function update(Request $request, $id)
     {
         $violation = Violation::findOrFail($id);
 
-        $validated = $request->validate([
-            'full_name' => 'required',
-            'student_no' => 'required',
-            'student_email' => 'required|email',
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'student_no' => 'required|string|max:50',
+            'student_email' => 'required|email|max:255',
             'date_reported' => 'required|date',
-            'yearlvl_degree' => 'required',
-            'offense' => 'required',
-            'level' => 'required|in:Minor,Major',
+            'yearlvl_degree' => 'required|string|max:255',
+            'offense' => 'required|string',
             'status' => 'required|in:Pending,Complete',
-            'action_taken' => 'nullable|in:Warning,DUSAP,Suspension,Expulsion'
         ]);
 
-        $violation->update($validated);
+        $violation->update([
+            'full_name' => $request->full_name,
+            'student_no' => $request->student_no,
+            'student_email' => $request->student_email,
+            'date_reported' => $request->date_reported,
+            'yearlvl_degree' => $request->yearlvl_degree,
+            'offense' => $request->offense,
+            'level' => $this->determineLevel($request->offense),
+            'status' => $request->status,
+        ]);
 
-        return redirect()->back()->with('success', 'Violation Report Updated Successfully.');
+        return redirect()->route('violations.index')->with('success', 'Violation updated successfully.');
     }
 
     public function destroy($id)
@@ -75,6 +93,26 @@ class ViolationController extends Controller
         $violation = Violation::findOrFail($id);
         $violation->delete();
 
-        return redirect()->back()->with('success', 'Violation Report Deleted Successfully.');
+        return redirect()->route('violations.index')->with('success', 'Violation deleted successfully.');
+    }
+
+    private function determineLevel($offense)
+    {
+        $minor = [
+            'Not wearing prescribed uniform/attire',
+            'Entry without ID',
+            'Possession of pornographic materials in any form/medium',
+            'Possession of any harmful gadget/weapon',
+            'Possession of cigarette and e-cigarette on campus',
+            'Possession of alcoholic drink',
+            'Simple misconduct',
+            'Smoking on campus',
+            'Eating and drinking in restricted areas',
+            'Public display of intimacy',
+            'All other acts embodied in the classroom policy including those of full online classes policies',
+            'All other acts/offenses of misconduct in any form',
+        ];
+
+        return in_array($offense, $minor) ? 'Minor' : 'Major';
     }
 }
