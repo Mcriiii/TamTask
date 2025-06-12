@@ -31,6 +31,7 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
         <thead>
           <tr>
             <th>Name</th>
+            <th>Role</th>
             <th>Created At</th>
             <th>Actions</th>
           </tr>
@@ -39,6 +40,7 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
           @foreach($users as $user)
           <tr>
             <td>{{ $user->first_name }} {{ $user->last_name }}</td>
+            <td>{{ $user->role }}</td>
             <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
             <td>
               <button
@@ -46,6 +48,7 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
                 data-id="{{ $user->id }}"
                 data-first-name="{{ $user->first_name }}"
                 data-last-name="{{ $user->last_name }}"
+                data-role="{{ $user->role }}"
                 data-email="{{ $user->email }}"
                 data-bs-toggle="modal" data-bs-target="#editAccountModal">
                 Edit

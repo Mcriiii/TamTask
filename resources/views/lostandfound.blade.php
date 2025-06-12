@@ -24,6 +24,12 @@
                     <h4 class="mb-0">Lost and Found Reports</h4>
                 </div>
                 <div class="card-body">
+                     @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
                     <form method="GET" action="{{ route('lost-found.index') }}" class="row g-3 mb-4">
                         <div class="col-md-5">
                             <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, ticket, or description">
@@ -46,10 +52,6 @@
                             </button>
                         </div>
                     </form>
-
-                    @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
 
                     @if($reports->isEmpty())
                     <p>No reports found.</p>
@@ -246,6 +248,14 @@
 </div> <!-- main-content -->
 
 <script>
+    setTimeout(function () {
+            const alert = document.getElementById('success-alert');
+            if (alert) {
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+                setTimeout(() => alert.remove(), 300); // remove from DOM
+            }
+        }, 3000);
 function openAddModal(prefix) {
     document.getElementById('reportType').value = prefix;
     document.getElementById('locationField').style.display = prefix === 'LOS' ? 'none' : 'block';
