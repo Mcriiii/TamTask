@@ -43,7 +43,7 @@
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Violation Reports</h4>
                     <button class="btn btn-light text-danger" data-bs-toggle="modal" data-bs-target="#addViolationModal">
-                        <i class="fas fa-plus"></i> Add Violation
+                        <i class="fas fa-plus"></i> Add Violation.
                     </button>
                 </div>
                 <div class="card-body">
