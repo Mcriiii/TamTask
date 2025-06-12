@@ -125,6 +125,50 @@
     </div>
 </div>
 
+<!-- Add Modal -->
+<div class="modal fade" id="addViolationModal" tabindex="-1" aria-labelledby="addViolationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('violations.store') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Add Violation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="violation_no" value="{{ 'VIO-' . strtoupper(uniqid()) }}">
+                <div class="mb-2"><label>Full Name</label><input name="full_name" class="form-control" required></div>
+                <div class="mb-2"><label>Student No</label><input name="student_no" class="form-control" required></div>
+                <div class="mb-2"><label>Email</label><input type="email" name="student_email" class="form-control" required></div>
+                <div class="mb-2"><label>Date</label><input type="date" name="date_reported" class="form-control" required></div>
+                <div class="mb-2"><label>Year & Degree</label><input name="yearlvl_degree" class="form-control" required></div>
+                <div class="mb-2"><label>Offense</label>
+                    <select name="offense" class="form-select" required>
+                        <optgroup label="Minor Offenses">
+                            @foreach($minor as $offense)
+                                <option>{{ $offense }}</option>
+                            @endforeach
+                        </optgroup>
+                        <optgroup label="Major Offenses">
+                            @foreach($major as $offense)
+                                <option>{{ $offense }}</option>
+                            @endforeach
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="mb-2"><label>Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Pending">Pending</option>
+                        <option value="Complete">Complete</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Edit Modal -->
 <div class="modal fade" id="editViolationModal" tabindex="-1" aria-labelledby="editViolationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
