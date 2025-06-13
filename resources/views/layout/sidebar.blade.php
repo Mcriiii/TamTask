@@ -18,7 +18,7 @@
     {{-- Lost & Found --}}
     <a href="{{ route($prefix . 'lost-found.index') }}" class="tab"><i class="fas fa-search"></i> Lost & Found </a>
     
-    <a href="#" class="tab"><i class="fas fa-certificate"></i> Certificate</a>
+    <a href="{{ route($prefix . 'certificates.index') }}" class="tab"><i class="fas fa-certificate"></i> Certificate</a>
     <a href="{{ route($prefix . 'complaints.index') }}" class="tab"><i class="fas fa-exclamation-circle"></i> Complaint</a>
     <a href="{{ route($prefix . 'referrals.index') }}" class="tab"><i class="fas fa-share-square"></i> Referral</a>
 

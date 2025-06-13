@@ -55,8 +55,19 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/referrals', [ReferralController::class, 'index'])->name('referrals.index');
     Route::post('/referrals/store', [ReferralController::class, 'store'])->name('referrals.store');
     Route::get('/referrals/edit/{id}', [ReferralController::class, 'edit'])->name('referrals.edit');
-    Route::put('/referrals/{id}', [ReferralController::class, 'update'])->name('referrals.update');
+    Route::put('/referrals/update/{id}', [ReferralController::class, 'update'])->name('referrals.update');
     Route::delete('/referrals/delete/{id}', [ReferralController::class, 'destroy'])->name('referrals.destroy');
+
+    // Certificate Routes
+    Route::get('/certificates', [CertificateController::class, 'index'])->name('certificates.index');
+    Route::post('/certificates/store', [CertificateController::class, 'store'])->name('certificates.store');
+    Route::get('/certificates/view/{id}', [CertificateController::class, 'view'])->name('certificates.view');
+    Route::delete('/certificates/delete/{id}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
+    Route::get('/certificates/edit/{id}', [CertificateController::class, 'edit'])->name('certificates.edit');
+    Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('certificates.update');
+
+
+
 
     // Export Analytics for User (optional)
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('pdf.export');
@@ -103,6 +114,15 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::get('/referrals/edit/{id}', [ReferralController::class, 'edit'])->name('admin.referrals.edit');
     Route::put('/referrals/update/{id}', [ReferralController::class, 'update'])->name('admin.referrals.update');
     Route::delete('/referrals/delete/{id}', [ReferralController::class, 'destroy'])->name('admin.referrals.destroy');
+
+    // Certificate Routes
+    Route::get('/certificates', [CertificateController::class, 'index'])->name('admin.certificates.index');
+    Route::post('/certificates/store', [CertificateController::class, 'store'])->name('admin.certificates.store');
+    Route::get('/certificates/view/{id}', [CertificateController::class, 'view'])->name('admin.certificates.view');
+    Route::delete('/certificates/delete/{id}', [CertificateController::class, 'destroy'])->name('admin.certificates.destroy');
+    Route::get('/certificates/edit/{id}', [CertificateController::class, 'edit'])->name('admin.certificates.edit');
+    Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('admin.certificates.update');
+
 
     // Export Analytics for Admin
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('admin.pdf.export');

@@ -114,6 +114,56 @@
     </div>
 </div>
 
+<!-- Add Modal -->
+<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route($prefix . 'incidents.store') }}" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Add Incident Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="ticket_no" value="{{ 'INC-' . strtoupper(uniqid()) }}"> <!-- ✅ Required -->
+
+                <div class="mb-3">
+                    <label class="form-label">Incident Description</label>
+                    <textarea name="incident" class="form-control" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reporter Name</label>
+                    <input type="text" name="reporter_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date Reported</label>
+                    <input type="date" name="date_reported" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reporter Role</label>
+                    <select name="reporter_role" class="form-select" required>
+                        <option value="Student">Student</option>
+                        <option value="Associates">Associates</option>
+                        <option value="Security">Security</option>
+                        <option value="SFU">SFU</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Pending">Pending</option>
+                        <option value="Complete">Complete</option>
+                    </select>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-danger">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
 <!-- Edit Modal -->
 <div class="modal fade" id="editIncidentModal" tabindex="-1" aria-labelledby="editIncidentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
