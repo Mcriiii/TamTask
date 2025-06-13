@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LostFound;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class LostFoundController extends Controller
 {
@@ -34,14 +38,21 @@ class LostFoundController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'reporter_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
+        $validator = Validator::make($request->all(), [
+            'reporter_name' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
+            'email' => 'required|email|max:255',
             'date_reported' => 'required|date',
             'location_found' => 'nullable|string|max:255',
             'item_type' => 'required|string|max:100',
             'description' => 'nullable|string|max:1000',
         ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('_modal', 'add');
+        }
 
         $prefix = $request->report_type === 'FND' ? 'FND' : 'LOS';
         $ticketNo = $prefix . '-' . rand(1000, 9999);
@@ -65,9 +76,9 @@ class LostFoundController extends Controller
     {
         $report = LostFound::findOrFail($id);
 
-        $request->validate([
-            'reporter_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
-            'email' => 'nullable|email|max:255',
+        $validator = Validator::make($request->all(), [
+            'reporter_name' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
+            'email' => 'required|email|max:255',
             'date_reported' => 'required|date',
             'location_found' => 'nullable|string|max:255',
             'item_type' => 'required|string|max:100',
@@ -75,7 +86,15 @@ class LostFoundController extends Controller
             'status' => 'required|in:Claimed,Unclaimed',
         ]);
 
-        $report->update($request->all());
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('_modal', 'edit')
+                ->with('edit_id', $id);
+        }
+
+        $report->update($validator->validated());
 
         return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
             ->with('success', 'Report updated successfully.');
@@ -99,11 +118,55 @@ class LostFoundController extends Controller
             ->with('success', 'Item marked as claimed.');
     }
 
-
-
     protected function getRoutePrefix()
     {
         $user = Auth::user();
         return $user && $user->role === 'admin' ? 'admin.' : '';
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = LostFound::query();
+
+        // Optional month filter (expects YYYY-MM from <input type="month">)
+        if ($request->filled('month')) {
+            $month = Carbon::parse($request->month);
+            $query->whereMonth('date_reported', $month->month)
+                ->whereYear('date_reported', $month->year);
+        }
+
+        // Optional year-only filter
+        if ($request->filled('year')) {
+            $query->whereYear('date_reported', $request->year);
+        }
+
+        // Get filtered data
+        $reports = $query->latest()->get();
+
+        // Summary counts
+        $total = $reports->count();
+        $claimed = $reports->where('status', 'Claimed')->count();
+        $unclaimed = $reports->where('status', 'Unclaimed')->count();
+
+        // 🥇 Get the top most lost item
+        $itemCounts = $reports->groupBy('item_type')->map->count();
+
+        $max = $itemCounts->max();
+        $topItems = $itemCounts->filter(fn($count) => $count === $max);
+
+        $topItem = $topItems->count() === 1
+            ? ['item' => $topItems->keys()->first(), 'count' => $max]
+            : null;
+
+        // Load the PDF view with all data
+        $pdf = Pdf::loadView('admin.pdf.lostfound', [
+            'reports' => $reports,
+            'total' => $total,
+            'claimed' => $claimed,
+            'unclaimed' => $unclaimed,
+            'topItem' => $topItem, // 🟢 pass this to the view
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('lost_found_reports.pdf');
     }
 }

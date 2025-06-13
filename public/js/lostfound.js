@@ -1,40 +1,99 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById("lostFoundChart").getContext("2d");
 
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labelsData,
-            datasets: [{
-                label: "Number of Items Lost",
-                data: countsData,
-                backgroundColor: "rgba(75, 192, 192, 0.6)",
-                borderColor: "rgba(75, 192, 192, 1)",
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Lost Count"
+    document.addEventListener("DOMContentLoaded", function () {
+        // Register the datalabels plugin globally
+        Chart.register(ChartDataLabels);
+
+        // LOST ITEMS BAR CHART
+        const lostCtx = document.getElementById("lostFoundChart").getContext("2d");
+        const lostGradient = lostCtx.createLinearGradient(0, 0, 0, 300);
+        lostGradient.addColorStop(0, "rgba(56, 173, 169, 1)");
+        lostGradient.addColorStop(1, "rgba(56, 173, 169, 0.4)");
+
+        new Chart(lostCtx, {
+            type: "bar",
+            data: {
+                labels: labelsData,
+                datasets: [{
+                    label: "Lost Items",
+                    data: countsData,
+                    backgroundColor: lostGradient,
+                    borderColor: "rgba(56, 173, 169, 1)",
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        color: "#2e2e2e",
+                        anchor: "end",
+                        align: "start",
+                        font: {
+                            weight: "bold",
+                            size: 18
+                        },
+                        formatter: value => value
                     }
                 },
-                x: {
-                    title: {
-                        display: true,
-                        text: "Item Type"
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0,
+                            callback: v => Number.isInteger(v) ? v : null
+                        }
                     }
                 }
             },
-            plugins: {
-                legend: {
-                    display: false
+            plugins: [ChartDataLabels]
+        });
+
+        // VIOLATION CHART (Horizontal bar)
+        const vCtx = document.getElementById("violationChart").getContext("2d");
+        const vGradient = vCtx.createLinearGradient(0, 0, 600, 0);
+        vGradient.addColorStop(0, "rgba(255, 99, 132, 1)");
+        vGradient.addColorStop(1, "rgba(255, 99, 132, 0.3)");
+
+        new Chart(vCtx, {
+            type: "bar",
+            data: {
+                labels: vLabelsData,
+                datasets: [{
+                    label: "Violations",
+                    data: vCountsData,
+                    backgroundColor: vGradient,
+                    borderColor: "rgba(255, 99, 132, 1)",
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        color: "#2e2e2e",
+                        anchor: "end",
+                        align: "right",
+                        font: {
+                            weight: "bold",
+                            size: 18
+                        },
+                        formatter: value => value
+                    }
+                },
+                responsive: true,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0,
+                            callback: v => Number.isInteger(v) ? v : null
+                        }
+                    }
                 }
-            }
-        }
+            },
+            plugins: [ChartDataLabels]
+        });
     });
-});
+

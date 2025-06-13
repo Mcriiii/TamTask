@@ -106,6 +106,8 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
 
     // Export Analytics for Admin
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('admin.pdf.export');
+    Route::get('/lost-found/export/pdf', [LostFoundController::class, 'exportPdf'])->name('admin.lost-found.export.pdf');
+
 
     // Manage Accounts
     Route::get('/accounts', [AccountController::class, 'accountlist'])->name('admin.accounts');
