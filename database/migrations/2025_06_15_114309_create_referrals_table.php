@@ -15,8 +15,8 @@ return new class extends Migration {
             $table->string('referral_no')->unique();
             $table->dateTime('date_reported');
             $table->string('level');
+            $table->string('student_name'); 
             $table->dateTime('date_to_see');
-            $table->string('role');
             $table->string('status')->default('Pending');
             $table->timestamps();
         });
