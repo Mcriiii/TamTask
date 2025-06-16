@@ -10,8 +10,8 @@ class Referral extends Model
         'referral_no',
         'date_reported',
         'level',
+        'student_name',  // added
         'date_to_see',
-        'role',
         'status',
     ];
 }
