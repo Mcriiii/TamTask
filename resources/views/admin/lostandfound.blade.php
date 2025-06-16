@@ -8,7 +8,8 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     .modern-table {
         width: 100%;
         border-collapse: separate;
-        border-spacing: 0 12px; /* spacing between rows */
+        border-spacing: 0 12px;
+        /* spacing between rows */
     }
 
     .modern-table thead {
@@ -90,261 +91,259 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     @include('layout.sidebar')
 
     <div class="main-content">
-
-        
-            <div class="card-header text-black text-center">
-                <h4 class="mb-0">Lost and Found Reports</h4>
+        <div class="card-header text-black text-center">
+            <h4 class="mb-0">Lost and Found Reports</h4>
+        </div>
+        <div class="card-body">
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div class="card-body">
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @endif
+            <form method="GET" action="{{ route($prefix . 'lost-found.export.pdf') }}" class="row g-2 align-items-end mb-4">
+                <div class="col-md-3">
+                    <label for="month">Export by Month</label>
+                    <input type="month" name="month" id="month" class="form-control" value="{{ request('month') }}">
                 </div>
-                @endif
-                <form method="GET" action="{{ route($prefix . 'lost-found.export.pdf') }}" class="row g-2 align-items-end mb-4">
-                    <div class="col-md-3">
-                        <label for="month">Export by Month</label>
-                        <input type="month" name="month" id="month" class="form-control" value="{{ request('month') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="year">Or Year</label>
-                        <input type="number" name="year" id="year" class="form-control" min="2020" value="{{ request('year') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-outline-danger">
-                            <i class="fas fa-file-pdf"></i> Export PDF
-                        </button>
-                    </div>
-                </form>
-
-                <form method="GET" action="{{ route($prefix . 'lost-found.index') }}" class="row g-3 mb-4">
-                    <div class="col-md-5">
-                        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, ticket, or description">
-                    </div>
-                    <div class="col-md-4">
-                        <select name="item_type" class="form-select">
-                            <option value="">-- Filter by Item --</option>
-                            @foreach ($itemTypes as $item)
-                            <option value="{{ $item }}" {{ request('item_type') == $item ? 'selected' : '' }}>{{ $item }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex justify-content-between">
-                        <div>
-                            <button type="submit" class="btn btn-primary me-1">Filter</button>
-                            <a href="{{ route($prefix . 'lost-found.index') }}" class="btn btn-secondary">Clear</a>
-                        </div>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseReportTypeModal">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
-                    </div>
-                </form>
-
-                @if($reports->isEmpty())
-                <p>No reports found.</p>
-                @else
-                <div class="modern-table-container">
-                    <table class="modern-table">
-
-                        <thead>
-                            <tr>
-                                <th>Ticket No</th>
-                                <th>Reporter</th>
-                                <th>Email</th>
-                                <th>Date</th>
-                                <th>Location Found</th>
-                                <th>Item</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($reports as $report)
-                            <tr>
-                                <td>{{ $report->ticket_no }}</td>
-                                <td>{{ $report->reporter_name }}</td>
-                                <td>{{ $report->email ?? '-' }}</td>
-                                <td>{{ $report->date_reported }}</td>
-                                <td>{{ $report->location_found ?? 'N/A' }}</td>
-                                <td>{{ $report->item_type }}</td>
-                                <td>{{ $report->description }}</td>
-                                <td>{{ $report->status }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editLostFoundModal"
-                                        data-id="{{ $report->id }}"
-                                        data-reporter="{{ $report->reporter_name }}"
-                                        data-email="{{ $report->email }}"
-                                        data-date="{{ $report->date_reported }}"
-                                        data-location="{{ $report->location_found }}"
-                                        data-type="{{ $report->item_type }}"
-                                        data-description="{{ $report->description }}"
-                                        data-status="{{ $report->status }}">
-                                        Edit
-                                    </button>
-
-                                    @if($report->status === 'Unclaimed')
-                                    <form action="{{ route($prefix . 'lost-found.claim', $report->id) }}" method="POST" style="display:inline-block;">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Mark Claimed</button>
-                                    </form>
-                                    @endif
-
-                                    <form action="{{ route($prefix . 'lost-found.destroy', $report->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure to delete this report?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="col-md-2">
+                    <label for="year">Or Year</label>
+                    <input type="number" name="year" id="year" class="form-control" min="2020" value="{{ request('year') }}">
                 </div>
-                {{ $reports->withQueryString()->links() }}
-                @endif
-
-                <!-- Choose Report Type Modal -->
-                <div class="modal fade" id="chooseReportTypeModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Choose Report Type</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body text-center">
-                                <button type="button" class="btn btn-outline-primary me-2" onclick="openAddModal('FND')">Found Item</button>
-                                <button type="button" class="btn btn-outline-warning" onclick="openAddModal('LOS')">Lost Item</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
                 </div>
+            </form>
 
-                <!-- Add Modal -->
-                <div class="modal fade" id="addLostFoundModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Add Lost and Found Report</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                @if(old('_modal') === 'add' && $errors->any())
-                                <div class="alert alert-danger">
-                                    <ul class="mb-0">
-                                        @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                @endif
-                                <form action="{{ route($prefix . 'lost-found.store') }}" method="POST">
+            <form method="GET" action="{{ route($prefix . 'lost-found.index') }}" class="row g-3 mb-4">
+                <div class="col-md-5">
+                    <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, ticket, or description">
+                </div>
+                <div class="col-md-4">
+                    <select name="item_type" class="form-select">
+                        <option value="">-- Filter by Item --</option>
+                        @foreach ($itemTypes as $item)
+                        <option value="{{ $item }}" {{ request('item_type') == $item ? 'selected' : '' }}>{{ $item }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex justify-content-between">
+                    <div>
+                        <button type="submit" class="btn btn-primary me-1">Filter</button>
+                        <a href="{{ route($prefix . 'lost-found.index') }}" class="btn btn-secondary">Clear</a>
+                    </div>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseReportTypeModal">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+            </form>
+
+            @if($reports->isEmpty())
+            <p>No reports found.</p>
+            @else
+            <div class="modern-table-container">
+                <table class="modern-table">
+
+                    <thead>
+                        <tr>
+                            <th>Ticket No</th>
+                            <th>Reporter</th>
+                            <th>Email</th>
+                            <th>Date</th>
+                            <th>Location Found</th>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reports as $report)
+                        <tr>
+                            <td>{{ $report->ticket_no }}</td>
+                            <td>{{ $report->reporter_name }}</td>
+                            <td>{{ $report->email ?? '-' }}</td>
+                            <td>{{ $report->date_reported }}</td>
+                            <td>{{ $report->location_found ?? 'N/A' }}</td>
+                            <td>{{ $report->item_type }}</td>
+                            <td>{{ $report->description }}</td>
+                            <td>{{ $report->status }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editLostFoundModal"
+                                    data-id="{{ $report->id }}"
+                                    data-reporter="{{ $report->reporter_name }}"
+                                    data-email="{{ $report->email }}"
+                                    data-date="{{ $report->date_reported }}"
+                                    data-location="{{ $report->location_found }}"
+                                    data-type="{{ $report->item_type }}"
+                                    data-description="{{ $report->description }}"
+                                    data-status="{{ $report->status }}">
+                                    Edit
+                                </button>
+
+                                @if($report->status === 'Unclaimed')
+                                <form action="{{ route($prefix . 'lost-found.claim', $report->id) }}" method="POST" style="display:inline-block;">
                                     @csrf
-                                    <input type="hidden" name="_modal" value="add">
-                                    <input type="hidden" name="report_type" id="reportType">
-                                    <div class="mb-3"><label>Your Name</label><input type="text" name="reporter_name" class="form-control" value="{{ old('reporter_name') }}" required></div>
-                                    <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="{{ old('email') }}"></div>
-                                    <div class="mb-3"><label>Date Reported</label><input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required></div>
-                                    <div class="mb-3" id="locationField"><label>Location Found</label><input type="text" name="location_found" class="form-control" value="{{ old('location_found') }}"></div>
-                                    <div class="mb-3"><label>Item Type</label>
-                                        <select name="item_type" class="form-select" required>
-                                            <option value="">Select</option>
-                                            <option value="Wallet">Wallet</option>
-                                            <option value="Phone">Phone</option>
-                                            <option value="Bag">Bag</option>
-                                            <option value="Keys">Keys</option>
-                                            <option value="Others">Others</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3"><label>Description</label><textarea name="description" class="form-control">{{ old('description') }}</textarea></div>
-                                    <div class="text-end"><button type="submit" class="btn btn-primary">Submit</button></div>
+                                    <button type="submit" class="btn btn-sm btn-success">Mark Claimed</button>
                                 </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- Edit Modal -->
-                <div class="modal fade" id="editLostFoundModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Lost and Found Report</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                @if(old('_modal') === 'edit' && $errors->any())
-                                <div class="alert alert-danger">
-                                    <ul class="mb-0">
-                                        @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
                                 @endif
-                                <form method="POST" id="editForm"
-                                    action="{{ old('_modal') === 'edit' && session('edit_id') ? route($prefix . 'lost-found.update', session('edit_id')) : '' }}">
+
+                                <form action="{{ route($prefix . 'lost-found.destroy', $report->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure to delete this report?');">
                                     @csrf
-                                    @method('PUT')
-                                    <input type="hidden" name="_modal" value="edit">
-                                    <div class="mb-3">
-                                        <label>Reporter Name</label>
-                                        <input type="text" name="reporter_name" class="form-control"
-                                            value="{{ old('_modal') === 'edit' ? old('reporter_name') : '' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Email</label>
-                                        <input type="email" name="email" class="form-control"
-                                            value="{{ old('_modal') === 'edit' ? old('email') : '' }}">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Date Reported</label>
-                                        <input type="date" name="date_reported" class="form-control"
-                                            value="{{ old('_modal') === 'edit' ? old('date_reported') : '' }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Location Found</label>
-                                        <input type="text" name="location_found" class="form-control"
-                                            value="{{ old('_modal') === 'edit' ? old('location_found') : '' }}">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Item Type</label>
-                                        <select name="item_type" class="form-select" required>
-                                            <option value="Wallet" {{ old('_modal') === 'edit' && old('item_type') === 'Wallet' ? 'selected' : '' }}>Wallet</option>
-                                            <option value="Phone" {{ old('_modal') === 'edit' && old('item_type') === 'Phone' ? 'selected' : '' }}>Phone</option>
-                                            <option value="Bag" {{ old('_modal') === 'edit' && old('item_type') === 'Bag' ? 'selected' : '' }}>Bag</option>
-                                            <option value="Keys" {{ old('_modal') === 'edit' && old('item_type') === 'Keys' ? 'selected' : '' }}>Keys</option>
-                                            <option value="Others" {{ old('_modal') === 'edit' && old('item_type') === 'Others' ? 'selected' : '' }}>Others</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Description</label>
-                                        <textarea name="description" class="form-control">{{ old('_modal') === 'edit' ? old('description') : '' }}</textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Status</label>
-                                        <select name="status" class="form-select" required>
-                                            <option value="Unclaimed" {{ old('_modal') === 'edit' && old('status') === 'Unclaimed' ? 'selected' : '' }}>Unclaimed</option>
-                                            <option value="Claimed" {{ old('_modal') === 'edit' && old('status') === 'Claimed' ? 'selected' : '' }}>Claimed</option>
-                                        </select>
-                                    </div>
-                                    <div class="text-end">
-                                        <button type="submit" class="btn btn-primary">Update Report</button>
-                                    </div>
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        
+            {{ $reports->withQueryString()->links() }}
+            @endif
+
+            <!-- Choose Report Type Modal -->
+            <div class="modal fade" id="chooseReportTypeModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Choose Report Type</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="openAddModal('FND')">Found Item</button>
+                            <button type="button" class="btn btn-outline-warning" onclick="openAddModal('LOS')">Lost Item</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Modal -->
+            <div class="modal fade" id="addLostFoundModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Lost and Found Report</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if(old('_modal') === 'add' && $errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+                            <form action="{{ route($prefix . 'lost-found.store') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="_modal" value="add">
+                                <input type="hidden" name="report_type" id="reportType">
+                                <div class="mb-3"><label>Your Name</label><input type="text" name="reporter_name" class="form-control" value="{{ old('reporter_name') }}" required></div>
+                                <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="{{ old('email') }}"></div>
+                                <div class="mb-3"><label>Date Reported</label><input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required></div>
+                                <div class="mb-3" id="locationField"><label>Location Found</label><input type="text" name="location_found" class="form-control" value="{{ old('location_found') }}"></div>
+                                <div class="mb-3"><label>Item Type</label>
+                                    <select name="item_type" class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option value="Wallet">Wallet</option>
+                                        <option value="Phone">Phone</option>
+                                        <option value="Bag">Bag</option>
+                                        <option value="Keys">Keys</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3"><label>Description</label><textarea name="description" class="form-control">{{ old('description') }}</textarea></div>
+                                <div class="text-end"><button type="submit" class="btn btn-primary">Submit</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editLostFoundModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Lost and Found Report</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if(old('_modal') === 'edit' && $errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+                            <form method="POST" id="editForm"
+                                action="{{ old('_modal') === 'edit' && session('edit_id') ? route($prefix . 'lost-found.update', session('edit_id')) : '' }}">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="_modal" value="edit">
+                                <div class="mb-3">
+                                    <label>Reporter Name</label>
+                                    <input type="text" name="reporter_name" class="form-control"
+                                        value="{{ old('_modal') === 'edit' ? old('reporter_name') : '' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    <input type="email" name="email" class="form-control"
+                                        value="{{ old('_modal') === 'edit' ? old('email') : '' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Date Reported</label>
+                                    <input type="date" name="date_reported" class="form-control"
+                                        value="{{ old('_modal') === 'edit' ? old('date_reported') : '' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Location Found</label>
+                                    <input type="text" name="location_found" class="form-control"
+                                        value="{{ old('_modal') === 'edit' ? old('location_found') : '' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Item Type</label>
+                                    <select name="item_type" class="form-select" required>
+                                        <option value="Wallet" {{ old('_modal') === 'edit' && old('item_type') === 'Wallet' ? 'selected' : '' }}>Wallet</option>
+                                        <option value="Phone" {{ old('_modal') === 'edit' && old('item_type') === 'Phone' ? 'selected' : '' }}>Phone</option>
+                                        <option value="Bag" {{ old('_modal') === 'edit' && old('item_type') === 'Bag' ? 'selected' : '' }}>Bag</option>
+                                        <option value="Keys" {{ old('_modal') === 'edit' && old('item_type') === 'Keys' ? 'selected' : '' }}>Keys</option>
+                                        <option value="Others" {{ old('_modal') === 'edit' && old('item_type') === 'Others' ? 'selected' : '' }}>Others</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Description</label>
+                                    <textarea name="description" class="form-control">{{ old('_modal') === 'edit' ? old('description') : '' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Status</label>
+                                    <select name="status" class="form-select" required>
+                                        <option value="Unclaimed" {{ old('_modal') === 'edit' && old('status') === 'Unclaimed' ? 'selected' : '' }}>Unclaimed</option>
+                                        <option value="Claimed" {{ old('_modal') === 'edit' && old('status') === 'Claimed' ? 'selected' : '' }}>Claimed</option>
+                                    </select>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">Update Report</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+
 
     </div>
 </div>
@@ -352,14 +351,14 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
-        const alert = document.getElementById('success-alert');
-        if (alert) {
-            // Bootstrap fade out
-            alert.classList.remove('show');
-            alert.classList.add('fade');
-            setTimeout(() => alert.remove(), 500); // remove after fade out
-        }
-    }, 3000);
+            const alert = document.getElementById('success-alert');
+            if (alert) {
+                // Bootstrap fade out
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+                setTimeout(() => alert.remove(), 500); // remove after fade out
+            }
+        }, 3000);
 
         const modalError = document.getElementById('modalError')?.value;
 

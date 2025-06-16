@@ -11,9 +11,18 @@ use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ViolationController;
 use App\Http\Controllers\CertificateController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        $role = Auth::user()->role;
+        return redirect()->route($role === 'admin' ? 'admin.dashboard' : 'dashboard');
+    }
     return redirect()->route('login');
+});
+
+Route::get('/auth/check', function () {
+    return response()->json(['authenticated' => Auth::check()]);
 });
 
 // Shared Routes 
@@ -67,10 +76,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('certificates.update');
 
 
-
-
     // Export Analytics for User (optional)
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('pdf.export');
+    Route::get('/lost-found/export/pdf', [LostFoundController::class, 'exportPdf'])->name('lost-found.export.pdf');
 });
 
 // Admin Routes
@@ -106,7 +114,10 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::get('/violations/edit/{id}', [ViolationController::class, 'edit'])->name('admin.violations.edit');
     Route::put('/violations/update/{id}', [ViolationController::class, 'update'])->name('admin.violations.update');
     Route::delete('/violations/delete/{id}', [ViolationController::class, 'destroy'])->name('admin.violations.destroy');
-
+    Route::put('/violations/take-action/{id}', [ViolationController::class, 'takeAction'])
+     ->name('admin.violations.take-action');
+    Route::post('/violations/resolve/{student_no}', [ViolationController::class, 'resolveStudent'])
+     ->name('admin.violations.resolve');
 
     // Referral Routes
     Route::get('/referrals', [ReferralController::class, 'index'])->name('admin.referrals.index');

@@ -55,7 +55,9 @@ class LostFoundController extends Controller
         }
 
         $prefix = $request->report_type === 'FND' ? 'FND' : 'LOS';
-        $ticketNo = $prefix . '-' . rand(1000, 9999);
+        do {
+            $ticketNo = $prefix . '-' . rand(1000, 9999);
+        } while (LostFound::where('ticket_no', $ticketNo)->exists());
 
         LostFound::create([
             'ticket_no' => $ticketNo,

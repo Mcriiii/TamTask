@@ -72,29 +72,28 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             <h2 class="fw-bold">📊Analytics</h2>
             <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                 <div>
-                    <label class="form-label mb-0">Month:</label>
-                    <input type="month" name="month" value="{{ request('month') }}" class="form-control">
+                    <label for="month" class="form-label mb-0">Month:</label>
+                    <input type="month" id="month" name="month" value="{{ request('month') }}" class="form-control">
                 </div>
                 <div>
-                    <label class="form-label mb-0">From:</label>
-                    <input type="date" name="from" value="{{ request('from') }}" class="form-control">
+                    <label for="from" class="form-label mb-0">From:</label>
+                    <input type="date" id="from" name="from" value="{{ request('from') }}" class="form-control">
                 </div>
                 <div>
-                    <label class="form-label mb-0">To:</label>
-                    <input type="date" name="to" value="{{ request('to') }}" class="form-control">
+                    <label for="to" class="form-label mb-0">To:</label>
+                    <input type="date" id="to" name="to" value="{{ request('to') }}" class="form-control">
                 </div>
                 <div>
-                    <label class="form-label mb-0">Year:</label>
-                    <input type="number" name="year" value="{{ request('year') }}" class="form-control" min="2000" max="2100">
+                    <label for="year" class="form-label mb-0">Year:</label>
+                    <input type="number" id="year" name="year" value="{{ request('year') }}" class="form-control" min="2000" max="2100">
                 </div>
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm">Filter</button>
                     <a href="{{ route($prefix . 'dashboard') }}" class="btn btn-outline-danger btn-sm">Clear</a>
                 </div>
             </form>
-
-
         </div>
+
 
         <!-- KPI Cards -->
         <div class="row mb-4">
@@ -118,16 +117,26 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             </div>
         </div>
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="glass-card text-center kpi-box">
                     <div class="fw-bold">✅ Claimed Items</div>
                     <h4>{{ $totalClaimed ?? 0 }}</h4>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="glass-card text-center kpi-box">
                     <div class="fw-bold">📍 Unclaimed Items</div>
                     <h4>{{ $totalUnclaimed ?? 0 }}</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card text-center kpi-box">
+                    <div class="fw-bold">⚠️ Most Violation</div>
+                    @if ($topViolation)
+                    <h4>{{ $topViolation->offense }} ({{ $topViolation->total }})</h4>
+                    @else
+                    <h4>None (0)</h4>
+                    @endif
                 </div>
             </div>
         </div>
@@ -184,7 +193,22 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                     @forelse($recentViolations as $v)
                     <div class="recent-card">
                         <div>
-                            <a href="#" class="fw-bold">{{ $v->violation_no }}</a>
+                            <a href="#" class="fw-bold viewViolation"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewViolationModal"
+                                data-violation="{{ $v->violation_no }}"
+                                data-name="{{ $v->full_name }}"
+                                data-student="{{ $v->student_no }}"
+                                data-email="{{ $v->student_email }}"
+                                data-date="{{ $v->date_reported }}"
+                                data-degree="{{ $v->yearlvl_degree }}"
+                                data-offense="{{ $v->offense }}"
+                                data-level="{{ $v->level }}"
+                                data-status="{{ $v->status }}"
+                                data-action="{{ $v->action_taken ?? 'N/A' }}">
+                                {{ $v->violation_no }}
+                            </a>
+
                             <div class="text-muted">{{ $v->offense }}</div>
                         </div>
                         <span class="glass-badge">{{ $v->status }}</span>
@@ -246,12 +270,69 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     </div>
 </div>
 
+<!-- View Violation Modal -->
+<div class="modal fade" id="viewViolationModal" tabindex="-1" aria-labelledby="viewViolationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="viewViolationModalLabel">🚫 Violation Details 🚫</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Violation No</th>
+                        <td id="vmodal-violation"></td>
+                    </tr>
+                    <tr>
+                        <th>Full Name</th>
+                        <td id="vmodal-name"></td>
+                    </tr>
+                    <tr>
+                        <th>Student No</th>
+                        <td id="vmodal-student"></td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td id="vmodal-email"></td>
+                    </tr>
+                    <tr>
+                        <th>Year Level & Degree</th>
+                        <td id="vmodal-degree"></td>
+                    </tr>
+                    <tr>
+                        <th>Offense</th>
+                        <td id="vmodal-offense"></td>
+                    </tr>
+                    <tr>
+                        <th>Level</th>
+                        <td id="vmodal-level"></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td id="vmodal-status"></td>
+                    </tr>
+                    <tr>
+                        <th>Action Taken</th>
+                        <td id="vmodal-action"></td>
+                    </tr>
+                    <tr>
+                        <th>Date Reported</th>
+                        <td id="vmodal-date"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const viewLinks = document.querySelectorAll(".viewLostItem");
+        const viewViolationLinks = document.querySelectorAll(".viewViolation");
 
         viewLinks.forEach(link => {
             link.addEventListener("click", function() {
@@ -263,6 +344,21 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                 document.getElementById("modal-date").textContent = this.dataset.date;
                 document.getElementById("modal-location").textContent = this.dataset.location;
                 document.getElementById("modal-email").textContent = this.dataset.email;
+            });
+        });
+
+        viewViolationLinks.forEach(link => {
+            link.addEventListener("click", function() {
+                document.getElementById("vmodal-violation").textContent = this.dataset.violation;
+                document.getElementById("vmodal-name").textContent = this.dataset.name;
+                document.getElementById("vmodal-student").textContent = this.dataset.student;
+                document.getElementById("vmodal-email").textContent = this.dataset.email;
+                document.getElementById("vmodal-degree").textContent = this.dataset.degree;
+                document.getElementById("vmodal-offense").textContent = this.dataset.offense;
+                document.getElementById("vmodal-level").textContent = this.dataset.level;
+                document.getElementById("vmodal-status").textContent = this.dataset.status;
+                document.getElementById("vmodal-action").textContent = this.dataset.action;
+                document.getElementById("vmodal-date").textContent = this.dataset.date;
             });
         });
     });

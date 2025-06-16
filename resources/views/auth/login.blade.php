@@ -23,12 +23,12 @@
                     @csrf
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="text" placeholder="example@mail.com" id="email" class="form-control" name="email" required>
+                        <input type="text" placeholder="📧 Email" id="email" class="form-control" name="email" required>
                         @error('email')<span class="text-danger">{{ $message }}</span>@enderror
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" placeholder="••••••••" id="password" class="form-control" name="password" required>
+                        <input type="password" placeholder="🔒 Password" id="password" class="form-control" name="password" required>
                         @error('password')<span class="text-danger">{{ $message }}</span>@enderror
                     </div>
 

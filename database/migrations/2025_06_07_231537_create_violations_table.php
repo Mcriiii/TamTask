@@ -13,15 +13,24 @@ return new class extends Migration {
         Schema::create('violations', function (Blueprint $table) {
             $table->id();
             $table->string('violation_no')->unique();
-            $table->string('full_name');             
-            $table->string('student_no');        
-            $table->string('student_email');   
-            $table->date('date_reported');         
-            $table->string('yearlvl_degree');         
-            $table->string('offense');               
-            $table->enum('level', ['Minor', 'Major']); 
+            $table->string('full_name');
+            $table->string('student_no');
+            $table->string('student_email');
+            $table->date('date_reported');
+            $table->string('yearlvl_degree');
+            $table->string('offense');
+            $table->enum('level', ['Minor', 'Major']);
             $table->enum('status', ['Pending', 'Complete']);
-            $table->enum('action_taken', ['Warning', 'DUSAP','Suspension', 'Expulsion'])->nullable(); 
+            $table->enum('action_taken', [
+                'Warning',
+                'Parent/Guardian Conference',
+                'Suspension',
+                'Disciplinary Probation',
+                'DUSAP',
+                'Community Service',
+                'Expulsion',
+            ])->nullable()->default(null);
+            $table->boolean('escalation_resolved')->default(false);
             $table->timestamps();
         });
     }

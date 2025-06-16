@@ -28,8 +28,8 @@ class AnalyticsController extends Controller
             $fromDate = $year . '-01-01';
             $toDate = $year . '-12-31';
         } else {
-            $fromDate = now()->startOfYear()->toDateString(); 
-            $toDate = now()->endOfYear()->toDateString();     
+            $fromDate = now()->startOfYear()->toDateString();
+            $toDate = now()->endOfYear()->toDateString();
         }
 
         // LOST & FOUND: Filtered query
@@ -61,6 +61,19 @@ class AnalyticsController extends Controller
         $vLabels = $violationData->pluck('offense');
         $vCounts = $violationData->pluck('total');
 
+        // Determine most frequent violation
+        $maxViolation = $violationData->max('total');
+        $topViolations = $violationData->filter(fn($v) => $v->total == $maxViolation);
+
+        // If all offenses are tied (every offense has same total), treat it as no top violation
+        $distinctTotals = $violationData->pluck('total')->unique()->count();
+        if ($distinctTotals <= 1) {
+            $topViolation = null;  // no clear winner
+        } else {
+            // Otherwise take the first one (or handle ties differently if you want)
+            $topViolation = $topViolations->first();
+        }
+
         // Most recent 5 entries (not filtered)
         $recent = LostFound::latest()->take(5)->get();
         $recentViolations = Violation::latest()->take(5)->get();
@@ -72,6 +85,7 @@ class AnalyticsController extends Controller
             'labels',
             'counts',
             'topItem',
+            'topViolation',
             'recent',
             'vLabels',
             'vCounts',
