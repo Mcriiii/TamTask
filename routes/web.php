@@ -135,10 +135,10 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('admin.certificates.update');
 
 
-    // Export Analytics for Admin
+    // Export PDF
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('admin.pdf.export');
     Route::get('/lost-found/export/pdf', [LostFoundController::class, 'exportPdf'])->name('admin.lost-found.export.pdf');
-
+    Route::get('/certificates/{id}/pdf', [CertificateController::class, 'exportPdf'])->name('admin.certificates.exportPdf');
 
     // Manage Accounts
     Route::get('/accounts', [AccountController::class, 'accountlist'])->name('admin.accounts');

@@ -1,8 +1,11 @@
 <?php
-use App\Http\Controllers\Api\AuthController;
+
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LostFoundController;
+use App\Http\Controllers\Api\ViolationController;
 
 
 // ✅ Add this to define API Rate Limiter
@@ -15,7 +18,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware("auth:sanctum")->group(function(){
-    Route::post('/list',function(){
-        return \App\Models\User::all();
-    });
+  //  Route::post('/list',function(){
+   //     return \App\Models\User::all();
+   // });
+   Route::post('/teacher', [AuthController::class, 'teacherInfo']);
+   Route::post('/lost-found', [LostFoundController::class, 'store']);
+   Route::post('/violation', [ViolationController::class, 'store']);
 });

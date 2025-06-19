@@ -15,7 +15,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 <!-- 🌿 STYLES: Green BG + Glassmorphism -->
 <style>
     .glass-card {
-        background-color: rgba(255, 255, 255, 0.15);
+        background-color: rgba(255, 255, 255, 0.81);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border-radius: 1.5rem;

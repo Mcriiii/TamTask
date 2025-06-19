@@ -148,7 +148,7 @@ $major = [
                     <thead>
                         <tr>
                             <th>Violation No</th>
-                            <th>Name</th>
+                            <th>Reported By</th>
                             <th>Student No</th>
                             <th>Offense</th>
                             <th>Level</th>
@@ -162,7 +162,13 @@ $major = [
                         @forelse($violations as $v)
                         <tr>
                             <td>{{ $v->violation_no }}</td>
-                            <td>{{ $v->full_name }}</td>
+                            <td>
+                                @if($v->user)
+                                {{ $v->user->first_name }} {{ $v->user->last_name }}
+                                @else
+                                <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
                             <td>
                                 <a href="#"
                                     class="student-link"
@@ -173,8 +179,8 @@ $major = [
                                     data-email="{{ $v->student_email }}"
                                     data-yearlvl="{{ $v->yearlvl_degree }}"
                                     data-totalminors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_minors }}"
+                                    data-pendingminors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_minors }}"
                                     data-totalmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_majors }}"
-                                    data-minorsafter="{{ $stats->firstWhere('student_no', $v->student_no)?->minors_after_last_major }}"
                                     data-pendingmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_majors }}">
                                     {{ $v->student_no }}
                                 </a>
@@ -372,63 +378,63 @@ $major = [
 
 <!-- Student Details Modal -->
 <div class="modal fade" id="studentDetailsModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Student Violation Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Student No:</strong> <span id="modalStudentNo"></span></p>
-        <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
-        <p><strong>Email:</strong> <span id="modalStudentEmail"></span></p>
-        <p><strong>Year & Degree:</strong> <span id="modalYearlvl"></span></p>
-        <hr>
-        <p><strong>Total Minors:</strong> <span id="modalTotalMinors"></span></p>
-        <p><strong>Minor Violations Pending:</strong> <span id="modalMinorsAfter"></span></p>
-        <p><strong>Minor Violations Resolved:</strong> <span id="modalResolvedMinors"></span></p>
-        <p><strong>Total Majors:</strong> <span id="modalTotalMajors"></span></p>
-        <p><strong>Pending Major Violations:</strong> <span id="modalPendingMajors"></span></p>
-        <p><strong>Resolved Major Violations:</strong> <span id="modalResolvedMajors"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Student Violation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Student No:</strong> <span id="modalStudentNo"></span></p>
+                <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
+                <p><strong>Email:</strong> <span id="modalStudentEmail"></span></p>
+                <p><strong>Year & Degree:</strong> <span id="modalYearlvl"></span></p>
+                <hr>
+                <p><strong>Total Minors:</strong> <span id="modalTotalMinors"></span></p>
+                <p><strong>Pending Minor Violations:</strong> <span id="modalPendingMinors"></span></p>
+                <p><strong>Resolved Minor Violations:</strong> <span id="modalResolvedMinors"></span></p>
+                <p><strong>Total Majors:</strong> <span id="modalTotalMajors"></span></p>
+                <p><strong>Pending Major Violations:</strong> <span id="modalPendingMajors"></span></p>
+                <p><strong>Resolved Major Violations:</strong> <span id="modalResolvedMajors"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.student-link').forEach(el => {
-    el.addEventListener('click', function() {
-      console.log('Student link clicked:', this.dataset.studentno);
+        document.querySelectorAll('.student-link').forEach(el => {
+            el.addEventListener('click', function() {
+                const totalMinors = parseInt(this.dataset.totalminors) || 0;
+                const pendingMinors = parseInt(this.dataset.pendingminors) || 0;
+                const resolvedMinors = totalMinors - pendingMinors;
 
-      const totalMinors = parseInt(this.dataset.totalminors) || 0;
-      const minorsAfter = parseInt(this.dataset.minorsafter) || 0;
-      const totalMajors = parseInt(this.dataset.totalmajors) || 0;
-      const pendingMajors = parseInt(this.dataset.pendingmajors) || 0;
+                const totalMajors = parseInt(this.dataset.totalmajors) || 0;
+                const pendingMajors = parseInt(this.dataset.pendingmajors) || 0;
+                const resolvedMajors = totalMajors - pendingMajors;
 
-      const resolvedMinors = totalMinors - minorsAfter;
-      const resolvedMajors = totalMajors - pendingMajors;
+                document.getElementById('modalStudentNo').textContent = this.dataset.studentno;
+                document.getElementById('modalFullName').textContent = this.dataset.fullname;
+                document.getElementById('modalStudentEmail').textContent = this.dataset.email;
+                document.getElementById('modalYearlvl').textContent = this.dataset.yearlvl;
 
-      document.getElementById('modalStudentNo').textContent = this.dataset.studentno;
-      document.getElementById('modalFullName').textContent = this.dataset.fullname;
-      document.getElementById('modalStudentEmail').textContent = this.dataset.email;
-      document.getElementById('modalYearlvl').textContent = this.dataset.yearlvl;
+                document.getElementById('modalTotalMinors').textContent = totalMinors;
+                document.getElementById('modalPendingMinors').textContent = pendingMinors;
+                document.getElementById('modalResolvedMinors').textContent = resolvedMinors;
 
-      document.getElementById('modalTotalMinors').textContent = totalMinors;
-      document.getElementById('modalMinorsAfter').textContent = minorsAfter;
-      document.getElementById('modalResolvedMinors').textContent = resolvedMinors;
-      document.getElementById('modalTotalMajors').textContent = totalMajors;
-      document.getElementById('modalPendingMajors').textContent = pendingMajors;
-      document.getElementById('modalResolvedMajors').textContent = resolvedMajors;
-      document.getElementById('modalEscalated').textContent = minorsAfter >= 3 ? 'Yes' : 'No';
+                document.getElementById('modalTotalMajors').textContent = totalMajors;
+                document.getElementById('modalPendingMajors').textContent = pendingMajors;
+                document.getElementById('modalResolvedMajors').textContent = resolvedMajors;
+            });
+        });
     });
-  });
-});
+
+
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             const alert = document.getElementById('success-alert');

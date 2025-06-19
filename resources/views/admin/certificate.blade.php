@@ -2,7 +2,7 @@
 @section("title", "Certificate Requests")
 @section("content")
 @php
-    $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
+$prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 @endphp
 
 <div class="top-navbar">
@@ -42,7 +42,10 @@
                     </form>
 
                     @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                     @endif
 
                     <div class="table-responsive">
@@ -56,6 +59,7 @@
                                     <th>Year & Degree</th>
                                     <th>Date</th>
                                     <th>Purpose</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -70,6 +74,15 @@
                                     <td>{{ $certificate->date_requested }}</td>
                                     <td>{{ $certificate->purpose }}</td>
                                     <td>
+                                        @if($certificate->status == 'Declined')
+                                        <span class="badge bg-danger">Declined</span>
+                                        @elseif($certificate->status == 'Accepted')
+                                        <span class="badge bg-success">Accepted</span>
+                                        @else
+                                        <span class="badge bg-secondary">Pending</span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         <button class="btn btn-sm btn-warning"
                                             data-bs-toggle="modal" data-bs-target="#editCertificateModal"
                                             data-id="{{ $certificate->id }}"
@@ -78,7 +91,9 @@
                                             data-studentno="{{ $certificate->student_no }}"
                                             data-degree="{{ $certificate->yearlvl_degree }}"
                                             data-date="{{ $certificate->date_requested }}"
-                                            data-purpose="{{ $certificate->purpose }}">
+                                            data-purpose="{{ $certificate->purpose }}"
+                                            data-status="{{ $certificate->status }}">
+
                                             Edit
                                         </button>
                                         <button class="btn btn-sm btn-info"
@@ -90,6 +105,7 @@
                                             data-degree="{{ $certificate->yearlvl_degree }}"
                                             data-date="{{ $certificate->date_requested }}"
                                             data-purpose="{{ $certificate->purpose }}"
+                                            data-status="{{ $certificate->status }}"
                                             data-id="{{ $certificate->id }}">
                                             View
                                         </button>
@@ -154,6 +170,7 @@
                 <p><strong>Year & Degree:</strong> <span id="v_degree"></span></p>
                 <p><strong>Date Requested:</strong> <span id="v_date"></span></p>
                 <p><strong>Purpose:</strong> <span id="v_purpose"></span></p>
+                <p><strong>Status:</strong> <span id="v_status"></span></p>
                 <div class="text-end mt-3">
                     <a id="v_pdf_link" href="#" class="btn btn-outline-primary" target="_blank">Generate PDF</a>
                 </div>
@@ -184,6 +201,14 @@
                         <option value="Internship">Internship</option>
                     </select>
                 </div>
+                <div class="mb-2">
+                    <label>Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="Pending">Pending</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Declined">Declined</option>
+                    </select>
+                </div>
                 <div class="text-end"><button class="btn btn-primary">Update</button></div>
             </div>
         </form>
@@ -191,34 +216,45 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editModal = document.getElementById('editCertificateModal');
-    editModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const form = editModal.querySelector('#editCertificateForm');
-        const id = button.getAttribute('data-id');
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const alert = document.getElementById('success-alert');
+            if (alert) {
+                // Bootstrap fade out
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+                setTimeout(() => alert.remove(), 500); // remove after fade out
+            }
+        }, 3000);
+        const editModal = document.getElementById('editCertificateModal');
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const form = editModal.querySelector('#editCertificateForm');
+            const id = button.getAttribute('data-id');
 
-        form.action = `/admin/certificates/update/${id}`;
-        form.querySelector('[name="requester_name"]').value = button.getAttribute('data-requester');
-        form.querySelector('[name="email"]').value = button.getAttribute('data-email');
-        form.querySelector('[name="student_no"]').value = button.getAttribute('data-studentno');
-        form.querySelector('[name="yearlvl_degree"]').value = button.getAttribute('data-degree');
-        form.querySelector('[name="date_requested"]').value = button.getAttribute('data-date');
-        form.querySelector('[name="purpose"]').value = button.getAttribute('data-purpose');
-    });
+            form.action = `/admin/certificates/update/${id}`;
+            form.querySelector('[name="requester_name"]').value = button.getAttribute('data-requester');
+            form.querySelector('[name="email"]').value = button.getAttribute('data-email');
+            form.querySelector('[name="student_no"]').value = button.getAttribute('data-studentno');
+            form.querySelector('[name="yearlvl_degree"]').value = button.getAttribute('data-degree');
+            form.querySelector('[name="date_requested"]').value = button.getAttribute('data-date');
+            form.querySelector('[name="purpose"]').value = button.getAttribute('data-purpose');
+            form.querySelector('[name="status"]').value = button.getAttribute('data-status');
+        });
 
-    const viewModal = document.getElementById('viewCertificateModal');
-    viewModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        document.getElementById('v_ticket').innerText = button.getAttribute('data-ticket');
-        document.getElementById('v_name').innerText = button.getAttribute('data-name');
-        document.getElementById('v_email').innerText = button.getAttribute('data-email');
-        document.getElementById('v_student').innerText = button.getAttribute('data-student');
-        document.getElementById('v_degree').innerText = button.getAttribute('data-degree');
-        document.getElementById('v_date').innerText = button.getAttribute('data-date');
-        document.getElementById('v_purpose').innerText = button.getAttribute('data-purpose');
-        document.getElementById('v_pdf_link').href = `/admin/certificates/${button.getAttribute('data-id')}/pdf`;
+        const viewModal = document.getElementById('viewCertificateModal');
+        viewModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            document.getElementById('v_ticket').innerText = button.getAttribute('data-ticket');
+            document.getElementById('v_name').innerText = button.getAttribute('data-name');
+            document.getElementById('v_email').innerText = button.getAttribute('data-email');
+            document.getElementById('v_student').innerText = button.getAttribute('data-student');
+            document.getElementById('v_degree').innerText = button.getAttribute('data-degree');
+            document.getElementById('v_date').innerText = button.getAttribute('data-date');
+            document.getElementById('v_purpose').innerText = button.getAttribute('data-purpose');
+            document.getElementById('v_status').innerText = button.getAttribute('data-status');
+            document.getElementById('v_pdf_link').href = `/admin/certificates/${button.getAttribute('data-id')}/pdf`;
+        });
     });
-});
 </script>
 @endsection

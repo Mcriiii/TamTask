@@ -31,6 +31,10 @@ return new class extends Migration {
                 'Expulsion',
             ])->nullable()->default(null);
             $table->boolean('escalation_resolved')->default(false);
+
+            // ✅ Reporter user
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
