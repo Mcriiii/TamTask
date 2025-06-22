@@ -47,9 +47,19 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
         border-radius: 1rem;
         padding: 1rem;
         margin-bottom: 1rem;
+        /* Adds space between incident cards */
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        /* Adds space between ticket number, description, and status badge */
+        flex-wrap: wrap;
+        /* Ensures content wraps on smaller screens */
+    }
+
+    .row {
+        margin-bottom: 20px;
+        /* Adds space between rows of cards */
     }
 
     a {
@@ -238,6 +248,61 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="glass-card">
+                    <h6 class="fw-bold">📌 Recent Incidents</h6>
+                    @forelse($recentIncidents as $incident)
+                    <div class="recent-card">
+                        <div>
+                            <a href="#" class="fw-bold viewIncident"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewIncidentModal"
+                                data-ticket="{{ $incident->ticket_no }}"
+                                data-incident="{{ $incident->incident }}"
+                                data-reporter="{{ $incident->reporter_name }}"
+                                data-status="{{ $incident->status }}"
+                                data-date="{{ \Carbon\Carbon::parse($incident->date_reported)->format('Y-m-d') }}">
+                                {{ $incident->ticket_no }}
+                            </a>
+                            <div class="text-muted">{{ $incident->incident }}</div>
+                        </div>
+                        <span class="glass-badge" style="background-color: {{ $incident->level_color }}">{{ $incident->level }}</span>
+                    </div>
+                    @empty
+                    <div class="text-muted">No recent incidents.</div>
+                    @endforelse
+                </div>
+            </div>
+            <!-- Priority Incidents Column -->
+            <div class="col-md-6">
+                <div class="glass-card">
+                    <h6 class="fw-bold">🚨 Priority Incidents</h6>
+                    @forelse($priorityIncidents as $incident)
+                    @if($incident->status !== 'Completed') <!-- Only show if not "Completed" -->
+                    <div class="recent-card">
+                        <div>
+                            <a href="#" class="fw-bold viewIncident"
+                                data-bs-toggle="modal"
+                                data-bs-target="#viewIncidentModal"
+                                data-ticket="{{ $incident->ticket_no }}"
+                                data-incident="{{ $incident->incident }}"
+                                data-reporter="{{ $incident->reporter_name }}"
+                                data-status="{{ $incident->status }}"
+                                data-date="{{ \Carbon\Carbon::parse($incident->date_reported)->format('Y-m-d') }}">
+                                {{ $incident->ticket_no }}
+                            </a>
+                            <div class="text-muted">{{ $incident->incident }}</div>
+                        </div>
+                        <span class="glass-badge" style="background-color: {{ $incident->level_color }}">{{ $incident->level }}</span>
+                    </div>
+                    @endif
+                    @empty
+                    <div class="text-muted">No priority incidents.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
 
     </div>
 </div>
@@ -345,6 +410,42 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     </div>
 </div>
 
+<!-- View Incident Modal -->
+<div class="modal fade" id="viewIncidentModal" tabindex="-1" aria-labelledby="viewIncidentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="viewIncidentModalLabel">📄 Incident Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Ticket No</th>
+                        <td id="incident-ticket"></td>
+                    </tr>
+                    <tr>
+                        <th>Incident</th>
+                        <td id="incident-desc"></td>
+                    </tr>
+                    <tr>
+                        <th>Reporter</th>
+                        <td id="incident-reporter"></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td id="incident-status"></td>
+                    </tr>
+                    <tr>
+                        <th>Date Reported</th>
+                        <td id="incident-date">{{ \Carbon\Carbon::parse($incident->date_reported)->format('Y-m-d') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -378,6 +479,18 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                 document.getElementById("vmodal-status").textContent = this.dataset.status;
                 document.getElementById("vmodal-action").textContent = this.dataset.action;
                 document.getElementById("vmodal-date").textContent = this.dataset.date;
+            });
+        });
+
+        const viewIncidentLinks = document.querySelectorAll(".viewIncident");
+
+        viewIncidentLinks.forEach(link => {
+            link.addEventListener("click", function() {
+                document.getElementById("incident-ticket").textContent = this.dataset.ticket;
+                document.getElementById("incident-desc").textContent = this.dataset.incident;
+                document.getElementById("incident-reporter").textContent = this.dataset.reporter;
+                document.getElementById("incident-status").textContent = this.dataset.status;
+                document.getElementById("incident-date").textContent = this.dataset.date;
             });
         });
     });

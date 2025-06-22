@@ -1,10 +1,48 @@
 @extends("layout.main")
 @section("title", "Certificate Requests")
 @section("content")
-@php
-$prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
-@endphp
+
 <style>
+    /* Style for the file input */
+    .custom-file-input {
+        font-size: 0.8rem;
+        /* Smaller font size */
+        padding: 4px 8px;
+        /* Smaller padding */
+        border-radius: 8px;
+        /* Rounded corners */
+        width: 150px;
+        /* Smaller width */
+    }
+
+    /* Style for the "No file chosen" text box */
+    .custom-file-input:focus {
+        outline: none;
+        border-color: #28a745;
+        /* Green border on focus */
+    }
+
+    /* Custom style for "N/A" text */
+    .custom-na-text {
+        font-size: 0.8rem;
+        /* Smaller font size */
+        padding: 4px 8px;
+        /* Smaller padding */
+        background-color: #f1f1f1;
+        /* Light background */
+        border-radius: 8px;
+        /* Rounded corners */
+        color: #6c757d;
+        /* Gray text */
+        display: inline-block;
+        width: 150px;
+        /* Smaller width */
+        text-align: center;
+        /* Center the text */
+        border: 1px solid #ccc;
+        /* Light border */
+    }
+
     .modern-table {
         width: 100%;
         border-collapse: separate;
@@ -94,7 +132,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             </button>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route($prefix . 'certificates.index') }}" class="row g-3 mb-4">
+            <form method="GET" action="{{ route('certificates.index') }}" class="row g-3 mb-4">
                 <div class="col-md-5">
                     <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search by name, student no, or ticket no">
                 </div>
@@ -108,7 +146,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                 </div>
                 <div class="col-md-3 d-flex">
                     <button class="btn btn-primary me-2">Filter</button>
-                    <a href="{{ route($prefix . 'certificates.index') }}" class="btn btn-secondary">Clear</a>
+                    <a href="{{ route('certificates.index') }}" class="btn btn-secondary">Clear</a>
                 </div>
             </form>
 
@@ -156,15 +194,15 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                             <!-- 3. Upload or Update Form -->
                             <td>
                                 @if ($certificate->status === 'Accepted')
-                                <form method="POST" action="{{ route($prefix . 'certificates.uploadReceipt', $certificate->id) }}" enctype="multipart/form-data" class="d-flex justify-content-center align-items-center gap-2">
+                                <form method="POST" action="{{ route('certificates.uploadReceipt', $certificate->id) }}" enctype="multipart/form-data" class="d-flex justify-content-center align-items-center gap-2">
                                     @csrf
-                                    <input type="file" name="receipt" accept="image/*" class="form-control form-control-sm w-auto" required>
+                                    <input type="file" name="receipt" accept="image/*" class="form-control form-control-sm custom-file-input" required>
                                     <button type="submit" class="btn btn-sm btn-success">
                                         <i class="fas fa-upload"></i>
                                     </button>
                                 </form>
                                 @elseif (in_array($certificate->status, ['Uploaded', 'Ready for Release', 'Released']))
-                                <form method="POST" action="{{ route($prefix . 'certificates.updateFileStatus', $certificate->id) }}" class="d-flex justify-content-center align-items-center gap-2">
+                                <form method="POST" action="{{ route('certificates.updateFileStatus', $certificate->id) }}" class="d-flex justify-content-center align-items-center gap-2">
                                     @csrf @method('PUT')
                                     <select name="status" class="form-select form-select-sm w-auto" required>
                                         <option value="Uploaded" {{ $certificate->status == 'Uploaded' ? 'selected' : '' }}>Uploaded</option>
@@ -176,15 +214,16 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                                     </button>
                                 </form>
                                 @else
-                                <span class="text-muted">N/A</span>
+                                <span class="text-muted custom-na-text">N/A</span>
                                 @endif
                             </td>
+
 
                             <!-- 4. Student No (❗️Missing before) -->
                             <td>{{ $certificate->student_no }}</td>
 
                             <!-- 5. Year & Degree -->
-                            <td>{{ $certificate->yearlvl_degree }}</td>
+                            <td>{{ Str::limit($certificate->yearlvl_degree, 15) }}</td>
 
                             <!-- 6. Date -->
                             <td>{{ \Carbon\Carbon::parse($certificate->date_requested)->format('M d, Y') }}</td>
@@ -237,7 +276,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                                     data-status="{{ $certificate->status }}">
                                     Edit
                                 </button>
-                                <form method="POST" action="{{ route($prefix . 'certificates.destroy', $certificate->id) }}" class="d-inline">
+                                <form method="POST" action="{{ route('certificates.destroy', $certificate->id) }}" class="d-inline">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this request?')">Delete</button>
                                 </form>
@@ -277,7 +316,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 <!-- Add Modal -->
 <div class="modal fade" id="addCertificateModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="POST" action="{{ route($prefix . 'certificates.store') }}" class="modal-content">
+        <form method="POST" action="{{ route('certificates.store') }}" class="modal-content">
             @csrf
             <input type="hidden" name="_modal" value="add">
             <div class="modal-header">
@@ -570,7 +609,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             const id = button.getAttribute('data-id');
 
             // 🛠 Set form action
-            form.action = `{{ url(str_replace('.', '/', $prefix) . 'certificates') }}/${id}/update`;
+            form.action = `{{ url('certificates') }}/${id}/update`;
 
             // 🔍 Only populate if no validation error
             const isValidationError = "{{ old('_modal') }}" === "edit";

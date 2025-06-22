@@ -1,15 +1,82 @@
-@extends("layout.main") 
+@extends("layout.main")
 @section("title", "Incident Reports")
 @section("content")
-@php
-@endphp
+
+<style>
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+    .modern-table thead {
+        background: linear-gradient(to right, #38b000, rgb(84, 160, 7));
+        color: #fff;
+    }
+
+    .modern-table th {
+        padding: 12px 16px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .modern-table tbody tr {
+        background-color: rgba(254, 255, 240, 0.9);
+        border-radius: 999px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .modern-table td {
+        padding: 12px 16px;
+        text-align: center;
+        border: none;
+    }
+
+    .modern-table tbody tr td:first-child {
+        border-top-left-radius: 999px;
+        border-bottom-left-radius: 999px;
+    }
+
+    .modern-table tbody tr td:last-child {
+        border-top-right-radius: 999px;
+        border-bottom-right-radius: 999px;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: rgba(242, 194, 0, 0.25);
+        transform: scale(1.01);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .modern-table .btn {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+        border-radius: 8px;
+    }
+
+    .modern-table .btn-warning {
+        background-color: #ffcc00;
+        border: none;
+    }
+
+    .modern-table .btn-success {
+        background-color: #38b000;
+        border: none;
+    }
+
+    .modern-table .btn-danger {
+        background-color: #e63946;
+        border: none;
+    }
+</style>
 <div class="top-navbar">
     <img src="{{ asset('images/logoo.png') }}" alt="" class="logo-nav">
     <div class="user-greeting">
         @if(Auth::check())
-            Hello, {{ Auth::user()->first_name }}
+        Hello, {{ Auth::user()->first_name }}
         @else
-            Hello, Guest
+        Hello, Guest
         @endif
     </div>
 </div>
@@ -18,16 +85,15 @@
     @include('layout.sidebar')
 
     <div class="main-content">
-        <div class="container mt-5">
-            <div class="card shadow rounded">
-                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            
+                <div class="card-header  text-black d-flex justify-content-between align-items-center"style="padding-bottom: 1.5rem;">
                     <h4 class="mb-0">Incident Reports</h4>
-                    <button type="button" class="btn btn-light text-danger" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
                         <i class="fas fa-plus"></i> Add Incident
                     </button>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="{{ route( 'incidents.index') }}" class="row g-3 mb-4">
+                    <form method="GET" action="{{ route('incidents.index') }}" class="row g-3 mb-4">
                         <div class="col-md-4">
                             <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search by name, ticket, or incident">
                         </div>
@@ -50,12 +116,15 @@
                     </form>
 
                     @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                     @endif
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle">
-                            <thead class="table-dark">
+                    <div class="modern-table-container">
+                        <table class="modern-table">
+                            <thead>
                                 <tr>
                                     <th>Ticket No</th>
                                     <th>Incident</th>
@@ -75,7 +144,7 @@
                                     <td>{{ $incident->reporter_name }}</td>
                                     <td>{{ $incident->date_reported }}</td>
                                     <td>
-                                        <span style="color: {{ $incident->level_color }}; font-weight: bold;">■</span> 
+                                        <span style="color: {{ $incident->level_color }}; font-weight: bold;">■</span>
                                         {{ $incident->level }}
                                     </td>
                                     <td>{{ $incident->reporter_role }}</td>
@@ -108,16 +177,17 @@
                     </div>
                     {{ $incidents->withQueryString()->links() }}
                 </div>
-            </div>
-        </div>
+            
+        
     </div>
 </div>
 
 <!-- Add Modal -->
-<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true">
+<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true"> 
     <div class="modal-dialog">
         <form method="POST" action="{{ route('incidents.store') }}" class="modal-content">
             @csrf
+            <input type="hidden" name="_modal" value="add">
             <div class="modal-header">
                 <h5 class="modal-title">Add Incident Report</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -162,12 +232,14 @@
 </div>
 
 
+
 <!-- Edit Modal -->
 <div class="modal fade" id="editIncidentModal" tabindex="-1" aria-labelledby="editIncidentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="POST" id="editIncidentForm" class="modal-content">
             @csrf
             @method('PUT')
+            <input type="hidden" name="_modal" value="edit">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Incident</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -210,21 +282,41 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editModal = document.getElementById('editIncidentModal');
-    editModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const form = editModal.querySelector('#editIncidentForm');
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalError = document.getElementById('modalError')?.value;
 
-        const id = button.getAttribute('data-id');
-        form.action = `/incidents/update/${id}`;
+        if (modalError === 'add') {
+            new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
+        }
 
-        form.querySelector('[name="incident"]').value = button.getAttribute('data-incident');
-        form.querySelector('[name="reporter_name"]').value = button.getAttribute('data-reporter');
-        form.querySelector('[name="date_reported"]').value = button.getAttribute('data-date');
-        form.querySelector('[name="reporter_role"]').value = button.getAttribute('data-role');
-        form.querySelector('[name="status"]').value = button.getAttribute('data-status');
+        if (modalError === 'edit') {
+            new bootstrap.Modal(document.getElementById('editIncidentModal')).show();
+        }
     });
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const alert = document.getElementById('success-alert');
+            if (alert) {
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 3000);
+
+        const editModal = document.getElementById('editIncidentModal');
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const form = editModal.querySelector('#editIncidentForm');
+
+            const id = button.getAttribute('data-id');
+            form.action = `{{ route('incidents.update', ['id' => '__id']) }}`.replace('__id', id);
+            form.querySelector('[name="incident"]').value = button.getAttribute('data-incident');
+            form.querySelector('[name="reporter_name"]').value = button.getAttribute('data-reporter');
+            form.querySelector('[name="date_reported"]').value = button.getAttribute('data-date');
+            form.querySelector('[name="reporter_role"]').value = button.getAttribute('data-role');
+            form.querySelector('[name="status"]').value = button.getAttribute('data-status');
+        });
+    });
 </script>
+<input type="hidden" id="modalError" value="{{ old('_modal') }}">
 @endsection

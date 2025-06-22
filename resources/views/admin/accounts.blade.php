@@ -175,6 +175,7 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
                 <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Teacher</option>
                 <option value="security" {{ old('role') == 'security' ? 'selected' : '' }}>Security</option>
                 <option value="sfu" {{ old('role') == 'sfu' ? 'selected' : '' }}>SFU</option>
+                <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
               </select>
               <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
               <input type="password" name="password_confirmation" class="form-control mb-2" placeholder="Confirm Password" required>

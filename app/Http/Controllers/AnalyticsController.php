@@ -8,9 +8,16 @@ use App\Models\Incident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class AnalyticsController extends Controller
 {
+
+    protected function getRoutePrefix()
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'admin' ? 'admin.' : '';
+    }
     public function lostFoundReport(Request $request)
     {
         $month = $request->month;
@@ -64,6 +71,10 @@ class AnalyticsController extends Controller
         $iLabels = $incidentData->pluck('incident');
         $iCounts = $incidentData->pluck('total');
 
+        // Get incidents that are not completed and are in priority (Top 5)
+        $priorityIncidents = Incident::priority()->where('status', 'Pending')->get();
+
+
 
         // VIOLATION CHART DATA
         $violationData = Violation::whereBetween('date_reported', [$fromDate, $toDate])
@@ -88,11 +99,12 @@ class AnalyticsController extends Controller
         }
 
         // Most recent 5 entries (not filtered)
+        $recentIncidents = Incident::latest()->take(5)->get();
         $recent = LostFound::latest()->take(5)->get();
         $recentViolations = Violation::latest()->take(5)->get();
 
         // Dashboard view per role
-        $view = auth()->user()->role === 'admin' ? 'admin.dashboard' : 'dashboard';
+        $view = Auth::user()->role === 'admin' ? 'admin.dashboard' : 'dashboard';
 
         return view($view, compact(
             'labels',
@@ -112,8 +124,10 @@ class AnalyticsController extends Controller
             'month',
             'from',
             'to',
-            'year'
-            
+            'year',
+            'recentIncidents',
+            'priorityIncidents'
+
         ));
     }
 
