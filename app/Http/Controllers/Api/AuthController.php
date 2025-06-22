@@ -2,16 +2,61 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\UserOtp;
+use Illuminate\Http\Request;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+
 
 class AuthController extends Controller
 {
+    public function sendOtp(Request $request)
+    {
+
+        UserOtp::where('expires_at', '<', now())->delete();
+
+        $request->validate(['email' => 'required|email']);
+
+        $otp = rand(100000, 999999);
+
+        UserOtp::updateOrCreate(
+            ['email' => $request->email],
+            ['otp' => $otp, 'expires_at' => now()->addMinutes(5)]
+        );
+
+        Mail::raw("Your OTP is: $otp", function ($message) use ($request) {
+            $message->to($request->email)->subject("Your OTP Code");
+        });
+
+        return response()->json(['message' => 'OTP sent to your email.']);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required'
+        ]);
+
+        $otpRecord = UserOtp::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if ($otpRecord) {
+            return response()->json(['verified' => true]);
+        }
+
+        return response()->json(['verified' => false, 'message' => 'Invalid or expired OTP.'], 400);
+    }
+
     public function register(Request $request)
     {
+        
         $validated = $request->validate([
             'first_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
             'last_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
@@ -24,14 +69,14 @@ class AuthController extends Controller
                     $localPart = explode('@', $value)[0];
 
                     if ($role === 'student') {
-                        $matches = [];
-                        $digits = preg_match_all('/\d/', $localPart, $matches);
-                        if ($digits !== 9) {
-                            $fail('Error: Use your student number (must contain exactly 9 digits before @).');
+                        //Student: exactly 9 digits
+                        if (!preg_match('/^\d{9}$/', $localPart)) {
+                            $fail('Student email must contain exactly 9 digits and nothing else.');
                         }
                     } elseif (in_array($role, ['teacher', 'sfu'])) {
-                        if (preg_match('/\d/', $localPart)) {
-                            $fail(ucfirst($role) . ' Error: Use an official email without numbers.');
+                        //Teacher/SFU: only letters and periods
+                        if (!preg_match('/^[a-zA-Z._-]+$/', $localPart)) {
+                            $fail(ucfirst($role) . ' email must contain only letters and periods (no numbers).');
                         }
                     }
                     // security and other roles: no restriction
@@ -52,7 +97,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Registration successful',
-            'user' => $user,
+            'user' => $user->only(['id', 'first_name', 'last_name', 'email', 'role']),
         ], 201);
     }
 
@@ -87,23 +132,23 @@ class AuthController extends Controller
     }
 
     public function teacherInfo(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    if ($user->role !== 'teacher') {
+        if ($user->role !== 'teacher') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Unauthorized access'
-        ], 403);
+            'status' => 'success',
+            'data' => [
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        ]);
     }
-
-    return response()->json([
-        'status' => 'success',
-        'data' => [
-            'name' => $user->first_name . ' ' . $user->last_name,
-            'email' => $user->email,
-            'role' => $user->role
-        ]
-    ]);
-}
 }

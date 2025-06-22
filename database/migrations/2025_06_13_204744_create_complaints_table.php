@@ -19,6 +19,8 @@ return new class extends Migration
             $table->date('date_reported');
             $table->string('yearlvl_degree');
             $table->string('subject');
+            $table->dateTime('meeting_schedule')->nullable();
+            $table->string('status')->default('Pending');
             $table->timestamps();
         });
     }

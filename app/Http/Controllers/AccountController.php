@@ -27,6 +27,7 @@ class AccountController extends Controller
             'first_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
             'last_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
             'email' => 'required|email|unique:users,email',
+            'role' => 'required|in:student,teacher,security,sfu,user',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -42,7 +43,7 @@ class AccountController extends Controller
             'last_name'  => $request->last_name,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
-            'role'       => 'user', // Default role is user
+            'role'       => $request->role, // Default role is user
         ]);
 
         return redirect()->back()->with('success', 'User created successfully.');

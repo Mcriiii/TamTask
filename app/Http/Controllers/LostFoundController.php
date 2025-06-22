@@ -67,7 +67,7 @@ class LostFoundController extends Controller
             'location_found' => $request->location_found,
             'item_type' => $request->item_type,
             'description' => $request->description,
-            'status' => 'Unclaimed',
+            'status' => $request->report_type === 'FND' ? 'Unclaimed' : 'Searching',
         ]);
 
         return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
@@ -85,7 +85,7 @@ class LostFoundController extends Controller
             'location_found' => 'nullable|string|max:255',
             'item_type' => 'required|string|max:100',
             'description' => 'required|string|max:1000',
-            'status' => 'required|in:Claimed,Unclaimed',
+            'status' => 'required|in:Item Stored,Claimed,Unclaimed,Searching,Found,Returned,Closed',
         ]);
 
         if ($validator->fails()) {

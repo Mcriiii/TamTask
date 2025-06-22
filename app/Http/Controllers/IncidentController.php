@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Incident;
+use Illuminate\Support\Facades\Auth;
 
 class IncidentController extends Controller
 {
@@ -32,7 +34,9 @@ class IncidentController extends Controller
         }
 
         $incidents = $query->latest()->paginate(10);
-        return view('incident', compact('incidents'));
+        
+        $view = $this->getRoutePrefix() === 'admin.' ? 'admin.incident' : 'incident';
+        return view($view, compact('incidents'));
     }
 
     public function store(Request $request)
@@ -45,12 +49,17 @@ class IncidentController extends Controller
             'reporter_role' => 'required|string|max:100',
             'status' => 'required|in:Pending,Complete',
         ]);
+        do {
+            $ticketNo = 'INC-' . rand(1000, 9999);
+        } while (Incident::where('ticket_no', $ticketNo)->exists());
 
         $data = $request->all();
+        $data['ticket_no'] = $ticketNo;
         $data['level'] = (new Incident($data))->level; // auto-compute level
         Incident::create($data);
 
-        return redirect()->route('incidents.index')->with('success', 'Incident report added.');
+        return redirect()->route($this->getRoutePrefix() . 'incidents.index')
+            ->with('success', 'Incident report added.');
     }
 
     public function edit($id)
@@ -75,13 +84,21 @@ class IncidentController extends Controller
         $data['level'] = (new Incident($data))->level;
         $incident->update($data);
 
-        return redirect()->route('incidents.index')->with('success', 'Incident updated.');
+        return redirect()->route($this->getRoutePrefix() . 'incidents.index')
+            ->with('success', 'Incident updated.');
     }
 
     public function destroy($id)
     {
         $incident = Incident::findOrFail($id);
         $incident->delete();
-        return redirect()->route('incidents.index')->with('success', 'Incident deleted.');
+        return redirect()->route($this->getRoutePrefix() . 'incidents.index')
+            ->with('success', 'Incident deleted.');
+    }
+
+    protected function getRoutePrefix()
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'admin' ? 'admin.' : '';
     }
 }

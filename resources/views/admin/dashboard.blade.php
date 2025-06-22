@@ -60,6 +60,15 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     a:hover {
         text-decoration: underline;
     }
+
+    a.btn-secondary:hover {
+        text-decoration: none !important;
+
+    }
+
+    .sidebar a:hover {
+        text-decoration: none;
+    }
 </style>
 
 <div class="main-wrapper">
@@ -69,7 +78,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 
         <!-- Header & Filter -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">📊Analytics</h2>
+            <h2 class="fw-bold">Dashboard</h2>
             <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                 <div>
                     <label for="month" class="form-label mb-0">Month:</label>
@@ -89,7 +98,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                 </div>
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                    <a href="{{ route($prefix . 'dashboard') }}" class="btn btn-outline-danger btn-sm">Clear</a>
+                    <a href="{{ route($prefix . 'dashboard') }}" class="btn btn-secondary">Clear</a>
                 </div>
             </form>
         </div>
@@ -143,16 +152,26 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 
         <!-- Charts -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="glass-card">
                     <h5 class="mb-3 fw-bold">📦 Lost Items Breakdown</h5>
-                    <canvas id="lostFoundChart" height="200"></canvas>
+                    <canvas id="lostFoundChart" height="60"></canvas>
                 </div>
             </div>
+        </div>
+
+        <!-- Violations and Incidents in 2-column layout -->
+        <div class="row mb-4">
             <div class="col-md-6">
                 <div class="glass-card">
                     <h5 class="mb-3 fw-bold">🚫 Violations Breakdown</h5>
                     <canvas id="violationChart" height="200"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glass-card">
+                    <h5 class="mb-3 fw-bold">⚠️ Incidents Breakdown</h5>
+                    <canvas id="incidentChart" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -369,6 +388,9 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
 
     const vLabelsData = @json($vLabels); // for violation
     const vCountsData = @json($vCounts);
+
+    const iLabelsData = @json($iLabels);
+    const iCountsData = @json($iCounts);
 </script>
 <script src="{{ asset('js/lostfound.js') }}"></script>
 @endpush

@@ -113,7 +113,7 @@ $major = [
 
         <div class="card-header  text-black d-flex justify-content-between align-items-center" style="padding-bottom: 1.5rem;">
             <h4 class="mb-0">Violation Reports</h4>
-            <button class="btn btn-light text-danger" data-bs-toggle="modal" data-bs-target="#addViolationModal">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addViolationModal">
                 <i class="fas fa-plus"></i> Add Violation
             </button>
         </div>
@@ -246,6 +246,7 @@ $major = [
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Error Handling Inside Modal -->
                 @if(old('_modal') === 'add' && $errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -255,13 +256,96 @@ $major = [
                     </ul>
                 </div>
                 @endif
+
+                <!-- Form Fields -->
                 <input type="hidden" name="violation_no" value="{{ 'VIO-' . strtoupper(uniqid()) }}">
-                <div class="mb-2"><label>Full Name</label><input name="full_name" class="form-control" value="{{ old('full_name') }}" required></div>
-                <div class="mb-2"><label>Student No</label><input name="student_no" class="form-control" value="{{ old('student_no') }}" required></div>
-                <div class="mb-2"><label>Email</label><input type="email" name="student_email" class="form-control" value="{{ old('student_email') }}" required></div>
-                <div class="mb-2"><label>Date</label><input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required></div>
-                <div class="mb-2"><label>Year & Degree</label><input name="yearlvl_degree" class="form-control" value="{{ old('yearlvl_degree') }}" required></div>
-                <div class="mb-2"><label>Offense</label>
+
+                <div class="mb-2">
+                    <label>Full Name</label>
+                    <input name="full_name" class="form-control" value="{{ old('full_name') }}" required>
+                    @if ($errors->has('full_name'))
+                    <span class="text-danger">{{ $errors->first('full_name') }}</span>
+                    @endif
+                </div>
+
+                <div class="mb-2">
+                    <label>Student No</label>
+                    <input name="student_no" class="form-control" value="{{ old('student_no') }}" required>
+                    @if ($errors->has('student_no'))
+                    <span class="text-danger">{{ $errors->first('student_no') }}</span>
+                    @endif
+                </div>
+
+                <div class="mb-2">
+                    <label>Email</label>
+                    <input type="email" name="student_email" class="form-control" value="{{ old('student_email') }}" required>
+                </div>
+
+                <div class="mb-2">
+                    <label>Date</label>
+                    <input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required>
+                </div>
+
+                <div class="mb-2">
+                    <label>Year & Degree</label>
+                    <select name="yearlvl_degree" class="form-select" required>
+                        <!-- Grade 11 and 12 with strands -->
+                        <optgroup label="Grade 11">
+                            <option value="Grade 11 - ABM" {{ old('yearlvl_degree') == 'Grade 11 - ABM' ? 'selected' : '' }}>Grade 11 - ABM</option>
+                            <option value="Grade 11 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Accountancy</option>
+                            <option value="Grade 11 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Business Administration</option>
+                            <option value="Grade 11 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Information Technology</option>
+                            <option value="Grade 11 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Engineering</option>
+                            <option value="Grade 11 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Health Allied</option>
+                            <option value="Grade 11 - GAS" {{ old('yearlvl_degree') == 'Grade 11 - GAS' ? 'selected' : '' }}>Grade 11 - GAS</option>
+                            <option value="Grade 11 - HUMSS" {{ old('yearlvl_degree') == 'Grade 11 - HUMSS' ? 'selected' : '' }}>Grade 11 - HUMSS</option>
+                            <option value="Grade 11 - Sports Track" {{ old('yearlvl_degree') == 'Grade 11 - Sports Track' ? 'selected' : '' }}>Grade 11 - Sports Track</option>
+                        </optgroup>
+
+                        <optgroup label="Grade 12">
+                            <option value="Grade 12 - ABM" {{ old('yearlvl_degree') == 'Grade 12 - ABM' ? 'selected' : '' }}>Grade 12 - ABM</option>
+                            <option value="Grade 12 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Accountancy</option>
+                            <option value="Grade 12 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Business Administration</option>
+                            <option value="Grade 12 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Information Technology</option>
+                            <option value="Grade 12 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Engineering</option>
+                            <option value="Grade 12 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Health Allied</option>
+                            <option value="Grade 12 - GAS" {{ old('yearlvl_degree') == 'Grade 12 - GAS' ? 'selected' : '' }}>Grade 12 - GAS</option>
+                            <option value="Grade 12 - HUMSS" {{ old('yearlvl_degree') == 'Grade 12 - HUMSS' ? 'selected' : '' }}>Grade 12 - HUMSS</option>
+                            <option value="Grade 12 - Sports Track" {{ old('yearlvl_degree') == 'Grade 12 - Sports Track' ? 'selected' : '' }}>Grade 12 - Sports Track</option>
+                        </optgroup>
+
+                        <!-- College Programs -->
+                        @php
+                        $courses = [
+                        'BS Accountancy',
+                        'BSBA Marketing & Multimedia Design',
+                        'BSBA Financial Management & Business Analytics',
+                        'BSBA Operations & Service Management',
+                        'BS Computer Science (Software Engineering)',
+                        'BSIT (Animation & Game Development)',
+                        'BSIT (Cybersecurity)',
+                        'BSIT (Web & Mobile Applications)',
+                        'BS Psychology',
+                        'BS Tourism Management',
+                        ];
+                        @endphp
+
+                        @foreach($courses as $course)
+                        <optgroup label="{{ $course }}">
+                            @for ($i = 1; $i <= 4; $i++)
+                                @php
+                                $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
+                                $value="$i{$suffix} Year - $course" ;
+                                @endphp
+                                <option value="{{ $value }}" {{ old('yearlvl_degree') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                                @endfor
+                        </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Offense</label>
                     <select name="offense" class="form-select" required>
                         <optgroup label="Minor Offenses">
                             @foreach($minor as $offense)
@@ -275,17 +359,23 @@ $major = [
                         </optgroup>
                     </select>
                 </div>
-                <div class="mb-2"><label>Status</label>
+
+                <div class="mb-2">
+                    <label>Status</label>
                     <select name="status" class="form-select" required>
                         <option value="Pending" {{ old('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
                         <option value="Complete" {{ old('status') == 'Complete' ? 'selected' : '' }}>Complete</option>
                     </select>
                 </div>
             </div>
-            <div class="modal-footer"><button class="btn btn-danger">Submit</button></div>
+            <div class="modal-footer">
+                <button class="btn btn-danger">Submit</button>
+            </div>
         </form>
     </div>
 </div>
+
+
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editViolationModal" tabindex="-1">
@@ -332,16 +422,78 @@ $major = [
                         <input type="date" name="date_reported" class="form-control"
                             value="{{ old('_modal') === 'edit' ? old('date_reported') : '' }}" required>
                     </div>
-                    <div class="mb-3">
-                        <label>Year Level & Degree</label>
-                        <input type="text" name="yearlvl_degree" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('yearlvl_degree') : '' }}" required>
+                    <div class="mb-2"><label>Year & Degree</label>
+                        <select name="yearlvl_degree" class="form-select" required>
+
+                            <!-- Grade 11 -->
+                            <optgroup label="Grade 11">
+                                @php
+                                $grade11Strands = [
+                                'ABM',
+                                'ABM Specialization - Accountancy',
+                                'ABM Specialization - Business Administration',
+                                'STEM Specialization - Information Technology',
+                                'STEM Specialization - Engineering',
+                                'STEM Specialization - Health Allied',
+                                'GAS',
+                                'HUMSS',
+                                'Sports Track',
+                                ];
+                                @endphp
+                                @foreach ($grade11Strands as $strand)
+                                @php $value = "Grade 11 - $strand"; @endphp
+                                <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                    {{ $value }}
+                                </option>
+                                @endforeach
+                            </optgroup>
+
+                            <!-- Grade 12 -->
+                            <optgroup label="Grade 12">
+                                @php
+                                $grade12Strands = $grade11Strands;
+                                @endphp
+                                @foreach ($grade12Strands as $strand)
+                                @php $value = "Grade 12 - $strand"; @endphp
+                                <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                    {{ $value }}
+                                </option>
+                                @endforeach
+                            </optgroup>
+
+                            <!-- College Courses -->
+                            @php
+                            $courses = [
+                            'BS Accountancy',
+                            'BSBA Marketing & Multimedia Design',
+                            'BSBA Financial Management & Business Analytics',
+                            'BSBA Operations & Service Management',
+                            'BS Computer Science (Software Engineering)',
+                            'BSIT (Animation & Game Development)',
+                            'BSIT (Cybersecurity)',
+                            'BSIT (Web & Mobile Applications)',
+                            'BS Psychology',
+                            'BS Tourism Management',
+                            ];
+                            @endphp
+
+                            @foreach($courses as $course)
+                            <optgroup label="{{ $course }}">
+                                @for ($i = 1; $i <= 4; $i++)
+                                    @php
+                                    $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
+                                    $value="$i{$suffix} Year - $course" ;
+                                    @endphp
+                                    <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                    {{ $value }}
+                                    </option>
+                                    @endfor
+                            </optgroup>
+                            @endforeach
+
+                        </select>
                     </div>
-                    <div class="mb-3">
-                        <label>Offense</label>
-                        <input type="text" name="offense" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('offense') : '' }}" required>
-                    </div>
+
                     <div class="mb-3">
                         <label>Action Taken</label>
                         <select name="action_taken" class="form-select form-select-sm" required>
@@ -473,10 +625,15 @@ $major = [
             form.querySelector('[name="student_no"]').value = button.getAttribute('data-studentno');
             form.querySelector('[name="student_email"]').value = button.getAttribute('data-email');
             form.querySelector('[name="date_reported"]').value = button.getAttribute('data-date');
-            form.querySelector('[name="yearlvl_degree"]').value = button.getAttribute('data-degree');
             form.querySelector('[name="offense"]').value = button.getAttribute('data-offense');
             form.querySelector('[name="status"]').value = button.getAttribute('data-status');
             form.querySelector('[name="action_taken"]').value = button.getAttribute('data-action_taken');
+            // ✅ Properly select yearlvl_degree
+            const yearDegree = button.getAttribute('data-degree');
+            const select = form.querySelector('[name="yearlvl_degree"]');
+            [...select.options].forEach(opt => {
+                opt.selected = (opt.value === yearDegree);
+            });
         });
     });
 </script>

@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Complaint;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class ComplaintController extends Controller
 {
     // Display the list of complaints with filters
     public function index(Request $request)
     {
+
+        Complaint::whereNotNull('meeting_schedule')
+            ->where('status', 'Ongoing')
+            ->where('meeting_schedule', '<', now())
+            ->update(['status' => 'Resolved']);
+
         $query = Complaint::query();
 
         // Search by student_no, ticket_no, yearlvl_degree, or subject
@@ -17,9 +25,9 @@ class ComplaintController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('student_no', 'like', "%{$search}%")
-                  ->orWhere('ticket_no', 'like', "%{$search}%")
-                  ->orWhere('yearlvl_degree', 'like', "%{$search}%")
-                  ->orWhere('subject', 'like', "%{$search}%");
+                    ->orWhere('ticket_no', 'like', "%{$search}%")
+                    ->orWhere('yearlvl_degree', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%");
             });
         }
 
@@ -28,27 +36,48 @@ class ComplaintController extends Controller
             $query->where('subject', $request->subject);
         }
 
-        $complaints = $query->latest()->paginate(10);
-        $ticketNo = 'CMP-' . strtoupper(uniqid());
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-        return view('complaints', compact('complaints', 'ticketNo'));
+        $complaints = $query->latest()->paginate(10);
+
+        $view = $this->getRoutePrefix() === 'admin.' ? 'admin.complaints' : 'complaints';
+
+        return view($view, compact('complaints'));
     }
 
     // Store a new complaint
     public function store(Request $request)
     {
-        $request->validate([
-            'ticket_no' => 'required|unique:complaints,ticket_no',
+        $validator = Validator::make($request->all(), [
             'reporter_name' => 'required|string|max:255',
-            'student_no' => 'required|string|max:50',
+            'student_no' => ['required', 'regex:/^\d{9}$/'],
             'date_reported' => 'required|date',
             'yearlvl_degree' => 'required|string|max:100',
             'subject' => 'required|string|max:255',
         ]);
 
-        Complaint::create($request->all());
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput($request->all() + ['_modal' => 'add']);
+        }
+        do {
+            $ticketNo = 'CMP-' . rand(1000, 9999);
+        } while (Complaint::where('ticket_no', $ticketNo)->exists());
 
-        return redirect()->route('complaints.index')->with('success', 'Complaint submitted successfully!');
+        Complaint::create([
+            'ticket_no' => $ticketNo,
+            'reporter_name' => $request->reporter_name,
+            'student_no' => $request->student_no,
+            'date_reported' => $request->date_reported,
+            'yearlvl_degree' => $request->yearlvl_degree,
+            'subject' => $request->subject,
+            'status' => 'Pending',
+        ]);
+        return redirect()->route($this->getRoutePrefix() . 'complaints.index')
+            ->with('success', "Complaint submitted! Ticket No: {$ticketNo}");
     }
 
     // Return edit form for modal (AJAX)
@@ -70,17 +99,48 @@ class ComplaintController extends Controller
     {
         $complaint = Complaint::findOrFail($id);
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'reporter_name' => 'required|string|max:255',
-            'student_no' => 'required|string|max:50',
+            'student_no' => ['required', 'regex:/^\d{9}$/'],
             'date_reported' => 'required|date',
             'yearlvl_degree' => 'required|string|max:100',
             'subject' => 'required|string|max:255',
+            'meeting_schedule' => 'nullable|date',
+            'status' => 'nullable|string',
         ]);
 
-        $complaint->update($request->all());
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withInput($request->all() + ['_modal' => 'edit'])
+                ->withErrors($validator);
+        }
 
-        return redirect()->route('complaints.index')->with('success', 'Complaint updated successfully.');
+        // Manually update fields
+        $complaint->reporter_name = $request->reporter_name;
+        $complaint->student_no = $request->student_no;
+        $complaint->date_reported = $request->date_reported;
+        $complaint->yearlvl_degree = $request->yearlvl_degree;
+        $complaint->subject = $request->subject;
+
+        // Handle meeting_schedule
+        if ($request->filled('meeting_schedule')) {
+            $complaint->meeting_schedule = $request->meeting_schedule;
+
+            // Automatically update status if still Pending
+            if ($complaint->status === 'Pending') {
+                $complaint->status = 'Ongoing';
+            }
+        }
+
+        // Allow manual override from form if status was submitted
+        if ($request->has('status')) {
+            $complaint->status = $request->status;
+        }
+
+        $complaint->save();
+
+        return redirect()->route($this->getRoutePrefix() . 'complaints.index')
+            ->with('success', 'Complaint updated successfully.');
     }
 
     // Delete a complaint
@@ -89,6 +149,13 @@ class ComplaintController extends Controller
         $complaint = Complaint::findOrFail($id);
         $complaint->delete();
 
-        return redirect()->route('complaints.index')->with('success', 'Complaint deleted successfully.');
+        return redirect()->route($this->getRoutePrefix() . 'complaints.index')
+            ->with('success', 'Complaint deleted successfully.');
+    }
+
+    protected function getRoutePrefix()
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'admin' ? 'admin.' : '';
     }
 }

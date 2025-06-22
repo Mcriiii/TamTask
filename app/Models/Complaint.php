@@ -17,5 +17,7 @@ class Complaint extends Model
         'date_reported',
         'yearlvl_degree',
         'subject',
+        'meeting_schedule',
+        'status',
     ];
 }

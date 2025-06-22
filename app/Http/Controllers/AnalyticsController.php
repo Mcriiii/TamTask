@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LostFound;
 use App\Models\Violation;
+use App\Models\Incident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -52,6 +53,18 @@ class AnalyticsController extends Controller
         $totalClaimed = LostFound::where('status', 'Claimed')->whereBetween('date_reported', [$fromDate, $toDate])->count();
         $totalUnclaimed = LostFound::where('status', 'Unclaimed')->whereBetween('date_reported', [$fromDate, $toDate])->count();
 
+
+        // INCIDENT CHART DATA
+        $incidentData = Incident::whereBetween('date_reported', [$fromDate, $toDate])
+            ->select('incident', DB::raw('count(*) as total'))
+            ->groupBy('incident')
+            ->orderByDesc('total')
+            ->get();
+
+        $iLabels = $incidentData->pluck('incident');
+        $iCounts = $incidentData->pluck('total');
+
+
         // VIOLATION CHART DATA
         $violationData = Violation::whereBetween('date_reported', [$fromDate, $toDate])
             ->select('offense', DB::raw('count(*) as total'))
@@ -89,6 +102,8 @@ class AnalyticsController extends Controller
             'recent',
             'vLabels',
             'vCounts',
+            'iLabels',
+            'iCounts',
             'recentViolations',
             'totalLost',
             'totalViolations',
@@ -98,6 +113,7 @@ class AnalyticsController extends Controller
             'from',
             'to',
             'year'
+            
         ));
     }
 

@@ -18,6 +18,7 @@ class Certificate extends Model
         'yearlvl_degree',
         'date_requested',
         'purpose',
-        'status'
+        'status',
+        'receipt_path'
     ];
 }

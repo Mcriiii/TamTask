@@ -13,7 +13,8 @@ RateLimiter::for('api', function (Illuminate\Http\Request $request) {
     return Limit::perMinute(60)->by($request->ip());
 });
 
-
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

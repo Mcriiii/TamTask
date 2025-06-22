@@ -10,15 +10,18 @@
   align-items: center;
   padding: 0 30px;
   font-size: 18px;
-  box-shadow: 0 5px 10px rgba(255, 255, 255, 0.5); /* <-- white shadow added */
+  box-shadow: 0 5px 10px rgba(255, 255, 255, 0.5);
+  border-bottom: 2px solid #ffffff; /* <-- white shadow added */
   }
 
 
   .logo-nav{
-    height: 80px; /* you can adjust this */
+    height: 60px; /* you can adjust this */
     width: auto;
     object-fit: contain;
+    padding-left: 70px;
   }
+
 
 
   .user-greeting {

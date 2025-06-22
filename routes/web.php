@@ -76,6 +76,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('certificates.update');
 
 
+
+
     // Export Analytics for User (optional)
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('pdf.export');
     Route::get('/lost-found/export/pdf', [LostFoundController::class, 'exportPdf'])->name('lost-found.export.pdf');
@@ -115,9 +117,9 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::put('/violations/update/{id}', [ViolationController::class, 'update'])->name('admin.violations.update');
     Route::delete('/violations/delete/{id}', [ViolationController::class, 'destroy'])->name('admin.violations.destroy');
     Route::put('/violations/take-action/{id}', [ViolationController::class, 'takeAction'])
-     ->name('admin.violations.take-action');
+        ->name('admin.violations.take-action');
     Route::post('/violations/resolve/{student_no}', [ViolationController::class, 'resolveStudent'])
-     ->name('admin.violations.resolve');
+        ->name('admin.violations.resolve');
 
     // Referral Routes
     Route::get('/referrals', [ReferralController::class, 'index'])->name('admin.referrals.index');
@@ -132,8 +134,9 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::get('/certificates/view/{id}', [CertificateController::class, 'view'])->name('admin.certificates.view');
     Route::delete('/certificates/delete/{id}', [CertificateController::class, 'destroy'])->name('admin.certificates.destroy');
     Route::get('/certificates/edit/{id}', [CertificateController::class, 'edit'])->name('admin.certificates.edit');
-    Route::put('/certificates/update/{id}', [CertificateController::class, 'update'])->name('admin.certificates.update');
-
+    Route::put('/certificates/{id}/update', [CertificateController::class, 'update'])->name('admin.certificates.update');
+    Route::post('/certificates/{id}/upload-receipt', [CertificateController::class, 'uploadReceipt'])->name('admin.certificates.uploadReceipt');
+    Route::put('/certificates/{id}/update-file-status', [CertificateController::class, 'updateFileStatus'])->name('admin.certificates.updateFileStatus');
 
     // Export PDF
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('admin.pdf.export');

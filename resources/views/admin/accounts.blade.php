@@ -4,6 +4,80 @@
 @php
 $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
 @endphp
+<style>
+  .modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    table-layout: auto;
+  }
+
+  .modern-table thead {
+    background: linear-gradient(to right, #38b000, rgb(84, 160, 7));
+    color: #fff;
+  }
+
+  .modern-table th {
+    padding: 12px 16px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .modern-table tbody tr {
+    background-color: rgba(254, 255, 240, 0.9);
+    border-radius: 999px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .modern-table td {
+    padding: 12px 16px;
+    text-align: center;
+    border: none;
+  }
+
+  .modern-table tbody tr td:first-child {
+    border-top-left-radius: 999px;
+    border-bottom-left-radius: 999px;
+  }
+
+  .modern-table tbody tr td:last-child {
+    border-top-right-radius: 999px;
+    border-bottom-right-radius: 999px;
+  }
+
+  .modern-table tbody tr:hover {
+    background-color: rgba(242, 194, 0, 0.25);
+    transform: scale(1.01);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .modern-table .btn {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .modern-table .btn-warning {
+    background-color: #ffcc00;
+    border: none;
+  }
+
+  .modern-table .btn-success {
+    background-color: #38b000;
+    border: none;
+  }
+
+  .modern-table .btn-danger {
+    background-color: #e63946;
+    border: none;
+  }
+
+  .modern-table .btn-info {
+    background-color: #00b4d8;
+    border: none;
+  }
+</style>
 
 <!-- Top Navbar -->
 <div class="top-navbar">
@@ -22,15 +96,18 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
       <h2>Manage Accounts</h2>
 
       <!-- Add Account Button -->
-      <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addAccountModal">
-        Add Account
-      </button>
+      <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+          Add Account
+        </button>
+      </div>
 
       <!-- Accounts Table -->
-      <table class="table table-striped table-bordered">
+      <table class="modern-table">
         <thead>
           <tr>
             <th>Name</th>
+            <th>Email</th>
             <th>Role</th>
             <th>Created At</th>
             <th>Actions</th>
@@ -40,6 +117,7 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
           @foreach($users as $user)
           <tr>
             <td>{{ $user->first_name }} {{ $user->last_name }}</td>
+            <td>{{ $user->email }}</td>
             <td>{{ $user->role }}</td>
             <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
             <td>
@@ -91,6 +169,13 @@ $prefix = Auth::user()->role === 'admin' ? 'admin.' : '';
               <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" value="{{ old('first_name') }}" required>
               <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name" value="{{ old('last_name') }}" required>
               <input type="email" name="email" class="form-control mb-2" placeholder="Email" value="{{ old('email') }}" required>
+              <select name="role" class="form-control mb-2" required>
+                <option value="" disabled selected>Select Role</option>
+                <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>Student</option>
+                <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Teacher</option>
+                <option value="security" {{ old('role') == 'security' ? 'selected' : '' }}>Security</option>
+                <option value="sfu" {{ old('role') == 'sfu' ? 'selected' : '' }}>SFU</option>
+              </select>
               <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
               <input type="password" name="password_confirmation" class="form-control mb-2" placeholder="Confirm Password" required>
 

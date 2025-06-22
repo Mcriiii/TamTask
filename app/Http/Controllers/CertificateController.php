@@ -8,15 +8,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 
 class CertificateController extends Controller
 {
+
+    protected function getRoutePrefix()
+    {
+        $user = Auth::user();
+        return $user && $user->role === 'admin' ? 'admin.' : '';
+    }
+
+
     public function index(Request $request)
     {
         $query = Certificate::query();
 
         if ($request->filled('search')) {
-            $query->where('requester_name', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('requester_name', 'like', "%{$search}%")
+                    ->orWhere('student_no', 'like', "%{$search}%")
+                    ->orWhere('ticket_no', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('purpose')) {
@@ -24,33 +39,37 @@ class CertificateController extends Controller
         }
 
         $certificates = $query->latest()->paginate(10);
-        $view = Auth::user()->role === 'admin' ? 'admin.certificate' : 'certificate';
+        $view = $this->getRoutePrefix() . 'certificate';
 
         return view($view, compact('certificates'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'requester_name' => 'required|string|max:255',
-            'student_no' => 'required|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'student_no' => ['required', 'regex:/^\d{9}$/'],
+            'email' => 'email|max:255',
             'yearlvl_degree' => 'required|string|max:255',
             'date_requested' => 'required|date',
             'purpose' => 'required|in:Transfer,Scholarship,Internship',
         ]);
 
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('_modal', 'add'); // ✅ This triggers the add modal to reopen
+        }
+
         do {
             $ticketNo = 'CERT-' . rand(1000, 9999);
         } while (Certificate::where('ticket_no', $ticketNo)->exists());
 
-        // Check if student has pending major violations
         $hasPendingMajor = Violation::where('student_no', $request->student_no)
             ->where('level', 'Major')
             ->where('status', 'Pending')
             ->exists();
-
-        $status = $hasPendingMajor ? 'Declined' : 'Pending';
 
         Certificate::create([
             'ticket_no' => $ticketNo,
@@ -60,23 +79,32 @@ class CertificateController extends Controller
             'yearlvl_degree' => $request->yearlvl_degree,
             'date_requested' => $request->date_requested,
             'purpose' => $request->purpose,
-            'status' => $status,
+            'status' => $hasPendingMajor ? 'Declined' : 'Pending',
         ]);
 
-        return redirect()->back()->with('success', 'Certificate request added.');
+        return redirect()->route($this->getRoutePrefix() . 'certificates.index')
+            ->with('success', 'Certificate request added.');
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'requester_name' => 'required|string|max:255',
-            'student_no' => 'required|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'student_no' => ['required', 'regex:/^\d{9}$/'],
+            'email' => 'email|max:255',
             'yearlvl_degree' => 'required|string|max:255',
             'date_requested' => 'required|date',
             'purpose' => 'required|in:Transfer,Scholarship,Internship',
             'status' => 'required|in:Pending,Accepted,Declined',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('_modal', 'edit')
+                ->with('edit_id', $id);
+        }
 
         $certificate = Certificate::findOrFail($id);
         $certificate->update($request->only([
@@ -90,7 +118,7 @@ class CertificateController extends Controller
         ]));
 
         // But also check if status needs to be corrected due to major violation
-        $hasPendingMajor = \App\Models\Violation::where('student_no', $request->student_no)
+        $hasPendingMajor = Violation::where('student_no', $request->student_no)
             ->where('level', 'Major')
             ->where('status', 'Pending')
             ->exists();
@@ -103,7 +131,8 @@ class CertificateController extends Controller
             $certificate->save();
         }
 
-        return redirect()->back()->with('success', 'Certificate updated successfully.');
+        return redirect()->route($this->getRoutePrefix() . 'certificates.index')
+            ->with('success', 'Certificate updated successfully.');
     }
 
     public function destroy($id)
@@ -111,7 +140,8 @@ class CertificateController extends Controller
         $certificate = Certificate::findOrFail($id);
         $certificate->delete();
 
-        return redirect()->back()->with('success', 'Certificate deleted successfully.');
+        return redirect()->route($this->getRoutePrefix() . 'certificates.index')
+            ->with('success', 'Certificate deleted successfully.');
     }
 
     public function exportPdf($id)
@@ -123,5 +153,53 @@ class CertificateController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('certificate_' . $certificate->ticket_no . '.pdf');
+    }
+
+    public function uploadReceipt(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'receipt' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('_receipt_error', $id); // To show the modal again
+        }
+
+        try {
+            $certificate = Certificate::findOrFail($id);
+
+            if ($request->hasFile('receipt')) {
+                $file = $request->file('receipt');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('receipts', $filename, 'public');
+
+                $certificate->receipt_path = 'receipts/' . $filename;
+                $certificate->status = 'Uploaded';
+                $certificate->save();
+            }
+
+            return redirect()->route($this->getRoutePrefix() . 'certificates.index')
+                ->with('success', 'Receipt uploaded and status updated to Uploaded.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Upload failed. Please try again.');
+        }
+
+    }
+
+    public function updateFileStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Uploaded,Ready for Release,Released',
+        ]);
+
+        $certificate = Certificate::findOrFail($id);
+        $certificate->status = $request->status;
+        $certificate->save();
+
+        return redirect()->route($this->getRoutePrefix() . 'certificates.index')
+            ->with('success', 'Status updated successfully.');
     }
 }

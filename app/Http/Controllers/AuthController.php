@@ -34,6 +34,12 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user(); // Get the authenticated user
+
+            if (!in_array($user->role, ['admin', 'user'])) {
+            Auth::logout();
+            return back()->with("error", "This role is not allowed to access the web portal.");
+        }
+
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard'); // Admin dashboard
             } else {

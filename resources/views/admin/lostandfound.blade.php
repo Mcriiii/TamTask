@@ -73,6 +73,28 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
         background-color: #e63946;
         border: none;
     }
+
+    .custom-pdf-btn {
+        background-color: #ff4d4f;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        font-weight: bold;
+        font-size: 0.95rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(255, 77, 79, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .custom-pdf-btn:hover {
+        background-color: #e04345;
+        box-shadow: 0 6px 14px rgba(255, 77, 79, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .custom-pdf-btn i {
+        margin-right: 6px;
+    }
 </style>
 
 
@@ -91,7 +113,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
     @include('layout.sidebar')
 
     <div class="main-content">
-        <div class="card-header text-black text-center">
+        <div class="card-header text-black">
             <h4 class="mb-0">Lost and Found Reports</h4>
         </div>
         <div class="card-body">
@@ -111,7 +133,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                     <input type="number" name="year" id="year" class="form-control" min="2020" value="{{ request('year') }}">
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="submit" class="btn custom-pdf-btn">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
                 </div>
@@ -175,6 +197,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                                     data-bs-toggle="modal"
                                     data-bs-target="#editLostFoundModal"
                                     data-id="{{ $report->id }}"
+                                    data-ticket="{{ $report->ticket_no }}"
                                     data-reporter="{{ $report->reporter_name }}"
                                     data-email="{{ $report->email }}"
                                     data-date="{{ $report->date_reported }}"
@@ -185,7 +208,7 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                                     Edit
                                 </button>
 
-                                @if($report->status === 'Unclaimed')
+                                @if(in_array($report->status, ['Unclaimed', 'Item Stored', 'Found', 'Searching']))
                                 <form action="{{ route($prefix . 'lost-found.claim', $report->id) }}" method="POST" style="display:inline-block;">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-success">Mark Claimed</button>
@@ -324,12 +347,14 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
                                     <label>Description</label>
                                     <textarea name="description" class="form-control">{{ old('_modal') === 'edit' ? old('description') : '' }}</textarea>
                                 </div>
+                                @php
+                                use Illuminate\Support\Str;
+                                $isFound = Str::startsWith($report->ticket_no, 'FND');
+                                @endphp
+
                                 <div class="mb-3">
                                     <label>Status</label>
-                                    <select name="status" class="form-select" required>
-                                        <option value="Unclaimed" {{ old('_modal') === 'edit' && old('status') === 'Unclaimed' ? 'selected' : '' }}>Unclaimed</option>
-                                        <option value="Claimed" {{ old('_modal') === 'edit' && old('status') === 'Claimed' ? 'selected' : '' }}>Claimed</option>
-                                    </select>
+                                    <select name="status" class="form-select" id="edit-status-dropdown" required></select>
                                 </div>
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-primary">Update Report</button>
@@ -379,6 +404,16 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             const button = event.relatedTarget;
             const form = editModal.querySelector('#editForm');
 
+            const statusSelect = form.querySelector('#edit-status-dropdown');
+            const currentStatus = button.getAttribute('data-status') || '';
+            const ticketNo = button.getAttribute('data-ticket') || '';
+            const isFound = ticketNo.startsWith('FND');
+
+            // Define options
+            const foundOptions = ['Item Stored', 'Claimed', 'Disposed'];
+            const lostOptions = ['Searching', 'Found', 'Claimed', 'Closed'];
+            const options = isFound ? foundOptions : lostOptions;
+
             form.action = `{{ route($prefix . 'lost-found.update', ['id' => '__id']) }}`.replace('__id', button.getAttribute('data-id'));
             form.querySelector('[name="reporter_name"]').value = button.getAttribute('data-reporter');
             form.querySelector('[name="email"]').value = button.getAttribute('data-email');
@@ -386,7 +421,16 @@ $prefix = Auth::user()->role == 'admin' ? 'admin.' : '';
             form.querySelector('[name="location_found"]').value = button.getAttribute('data-location');
             form.querySelector('[name="item_type"]').value = button.getAttribute('data-type');
             form.querySelector('[name="description"]').value = button.getAttribute('data-description');
-            form.querySelector('[name="status"]').value = button.getAttribute('data-status');
+
+            // Reset and fill dropdown
+            statusSelect.innerHTML = '';
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.text = option;
+                if (option === currentStatus) opt.selected = true;
+                statusSelect.appendChild(opt);
+            });
         });
     });
 

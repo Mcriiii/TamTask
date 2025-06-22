@@ -20,7 +20,16 @@ return new class extends Migration
             $table->string('yearlvl_degree');
             $table->date('date_requested');
             $table->string('purpose');
-            $table->string('status')->default('Pending');
+            $table->enum('status', [
+                'Pending',
+                'Accepted',
+                'Uploaded',
+                'Ready for Release',
+                'Released',
+                'Declined'
+            ])->default('Pending');
+
+            $table->string('receipt_path')->nullable();
             $table->timestamps();
         });
     }
