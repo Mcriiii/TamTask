@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id'); // ✅ Add this line
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('ticket_no')->unique();
             $table->string('reporter_name');
-            $table->string('student_no');
+            $table->string('student_no')->nullable();
             $table->date('date_reported');
-            $table->string('yearlvl_degree');
+            $table->string('yearlvl_degree')->nullable();
             $table->string('subject');
             $table->dateTime('meeting_schedule')->nullable();
             $table->string('status')->default('Pending');

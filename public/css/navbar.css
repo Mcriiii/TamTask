@@ -1,27 +1,22 @@
 
   /* Top Navbar */
   .top-navbar {
-  height: 80px;
-  width: 100%;
-  background: linear-gradient(to right, #009900, #009900cf);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 30px;
-  font-size: 18px;
-  box-shadow: 0 5px 10px rgba(255, 255, 255, 0.5);
-  border-bottom: 2px solid #ffffff; /* <-- white shadow added */
-  }
+    height: 80px;
+    background: #006E44;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    font-size: 18px;
+    position: relative;
+}
 
 
-  .logo-nav{
-    height: 60px; /* you can adjust this */
-    width: auto;
+  .logo-nav {
+    height: 150px;         /* ⬆️ Increase this to make it bigger */
+    max-height: 120px;     /* Optional: limit max size */
     object-fit: contain;
-    padding-left: 70px;
-  }
-
+}
 
 
   .user-greeting {

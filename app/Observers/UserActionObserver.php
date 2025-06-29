@@ -2,9 +2,15 @@
 
 namespace App\Observers;
 
-use App\Models\ActivityLog;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Incident;
+use App\Models\Complaint;
 use App\Models\LostFound;
+use App\Models\Violation;
+use App\Models\ActivityLog;
+use App\Models\Certificate;
+use App\Models\Referral;
+use Illuminate\Support\Facades\Auth;
 
 class UserActionObserver
 {
@@ -14,7 +20,7 @@ class UserActionObserver
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'updated',
-                'description' => 'Updated LostFound ID: ' . $model->id,
+                'description' => 'Updated LostFound Ticket No.: ' . $model->ticket_no,
             ]);
         }
 
@@ -22,21 +28,42 @@ class UserActionObserver
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'updated',
-                'description' => 'Updated Incident ID: ' . $model->id,
+                'description' => 'Updated Incident Ticket No. ' . $model->ticket_no,
             ]);
         }
         if ($model instanceof Complaint) {
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'updated',
-                'description' => 'Updated Complaint ID: ' . $model->id,
+                'description' => 'Updated Complaint Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Violation) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'description' => 'Updated Violation Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Certificate) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'description' => 'Updated Certificate Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Referral) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'description' => 'Updated Referral Ticket No. ' . $model->referral_no,
             ]);
         }
         if ($model instanceof User) {
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'updated',
-                'description' => 'Updated User ID: ' . $model->id,
+                'description' => 'Updated User Ticket No. ' . $model->ticket_no,
             ]);
         }
     }
@@ -47,7 +74,7 @@ class UserActionObserver
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'deleted',
-                'description' => 'Deleted LostFound ID: ' . $model->id,
+                'description' => 'Deleted LostFound Ticket No. ' . $model->ticket_no,
             ]);
         }
 
@@ -55,21 +82,42 @@ class UserActionObserver
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'deleted',
-                'description' => 'Deleted Incident ID: ' . $model->id,
+                'description' => 'Deleted Incident Ticket No. ' . $model->ticket_no,
             ]);
         }
         if ($model instanceof Complaint) {
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'deleted',
-                'description' => 'Deleted Complaint ID: ' . $model->id,
+                'description' => 'Deleted Complaint Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Violation) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'deleted',
+                'description' => 'Deleted Violation Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Certificate) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'deleted',
+                'description' => 'Deleted Certificate Ticket No. ' . $model->ticket_no,
+            ]);
+        }
+        if ($model instanceof Referral) {
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'deleted',
+                'description' => 'Deleted Referral Ticket No. ' . $model->referral_no,
             ]);
         }
         if ($model instanceof User) {
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'deleted',
-                'description' => 'Deleted User ID: ' . $model->id,
+                'description' => 'Deleted User Ticket No. ' . $model->ticket_no,
             ]);
         }
     }

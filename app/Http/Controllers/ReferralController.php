@@ -55,6 +55,7 @@ class ReferralController extends Controller
 
         // Create the new referral with the generated unique referral number
         Referral::create([
+            'user_id' => Auth::id(),
             'referral_no' => $referralNo,
             'date_reported' => $request->date_reported,
             'level' => $request->level,

@@ -56,7 +56,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        
+
         $validated = $request->validate([
             'first_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
             'last_name' => ["required", "regex:/^[a-zA-Z\s]+$/"],
@@ -140,6 +140,65 @@ class AuthController extends Controller
                 'status' => 'error',
                 'message' => 'Unauthorized access'
             ], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        ]);
+    }
+
+    public function studentInfo(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'student') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        ]);
+    }
+
+    public function securityInfo(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'security') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'role' => $user->role
+            ]
+        ]);
+    }
+
+    public function sfuInfo(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'sfu') {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         return response()->json([

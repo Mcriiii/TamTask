@@ -11,8 +11,8 @@ class LostFoundController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'reporter_name' => 'required|string|max:255',
-            'report_type' => 'required|in:LOS,FND', // e.g., passed from Android
+            'reporter_name' => ['required', 'regex:/^[\pL\s]+$/u'],
+            'report_type' => 'required|in:LOS,FND',
             'email' => 'required|email',
             'date_reported' => 'required|date',
             'item_type' => 'required|string',
@@ -49,4 +49,15 @@ class LostFoundController extends Controller
 
         return response()->json(['message' => 'Item marked as claimed']);
     }
+
+    public function myReports(Request $request)
+{
+    $email = $request->user()->email; // assuming authenticated user
+
+    $reports = LostFound::where('email', $email)
+        ->orderBy('date_reported', 'desc')
+        ->get();
+
+    return response()->json($reports);
+}
 }

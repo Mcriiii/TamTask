@@ -1,17 +1,17 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\LostFoundController;
-use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\LostFoundController;
 use App\Http\Controllers\ViolationController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\CertificateController;
-use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -77,7 +77,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/certificates/view/{id}', [CertificateController::class, 'view'])->name('certificates.view');
     Route::delete('/certificates/delete/{id}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
     Route::get('/certificates/edit/{id}', [CertificateController::class, 'edit'])->name('certificates.edit');
-    Route::put('certificates/{id}/update', [CertificateController::class, 'update'])->name('certificates.update');
+    Route::put('/certificates/{certificate}/update', [CertificateController::class, 'update'])->name('certificates.update');
     Route::post('/certificates/{id}/upload-receipt', [CertificateController::class, 'uploadReceipt'])->name('certificates.uploadReceipt');
     Route::put('/certificates/{id}/update-file-status', [CertificateController::class, 'updateFileStatus'])->name('certificates.updateFileStatus');
 
@@ -85,7 +85,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/dashboard/export', [AnalyticsController::class, 'exportToPdf'])->name('pdf.export');
     Route::get('/lost-found/export/pdf', [LostFoundController::class, 'exportPdf'])->name('lost-found.export.pdf');
     Route::get('/certificates/{id}/pdf', [CertificateController::class, 'exportPdf'])->name('certificates.exportPdf');
-
 });
 
 // Admin Routes
@@ -139,7 +138,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'nocache'])->group(function
     Route::get('/certificates/view/{id}', [CertificateController::class, 'view'])->name('admin.certificates.view');
     Route::delete('/certificates/delete/{id}', [CertificateController::class, 'destroy'])->name('admin.certificates.destroy');
     Route::get('/certificates/edit/{id}', [CertificateController::class, 'edit'])->name('admin.certificates.edit');
-    Route::put('/certificates/{id}/update', [CertificateController::class, 'update'])->name('admin.certificates.update');
+    Route::put('/certificates/{certificate}/update', [CertificateController::class, 'update'])->name('admin.certificates.update');
     Route::post('/certificates/{id}/upload-receipt', [CertificateController::class, 'uploadReceipt'])->name('admin.certificates.uploadReceipt');
     Route::put('/certificates/{id}/update-file-status', [CertificateController::class, 'updateFileStatus'])->name('admin.certificates.updateFileStatus');
 

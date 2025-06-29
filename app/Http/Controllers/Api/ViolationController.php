@@ -105,4 +105,23 @@ class ViolationController extends Controller
                 ->update(['status' => 'Declined']);
         }
     }
+
+    public function myViolations(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->role === 'student') {
+            // Student: see violations filed against them
+            $violations = Violation::where('student_no', $user->student_no)
+                ->orderBy('date_reported', 'desc')
+                ->get();
+        } else {
+            // Teacher/SFU/etc.: see violations they reported
+            $violations = Violation::where('user_id', $user->id)
+                ->orderBy('date_reported', 'desc')
+                ->get();
+        }
+
+        return response()->json($violations);
+    }
 }

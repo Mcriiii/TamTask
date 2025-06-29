@@ -2,7 +2,7 @@
 
 
 <div class="card shadow-sm mt-4 border-0">
-  <div class="card-header text-white rounded-top" style="background-color: #38b000;">
+  <div class="card-header text-white rounded-top" style="background-color: #006E44;">
     <h5 class="mb-0">Student Violation Summary</h5>
   </div>
   <div class="card-body p-0">

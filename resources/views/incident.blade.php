@@ -1,8 +1,74 @@
 @extends("layout.main")
 @section("title", "Incident Reports")
 @section("content")
-
 <style>
+    .text-button {
+        background: none;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.9rem;
+        text-decoration: underline;
+    }
+
+    .text-button:hover {
+        opacity: 0.8;
+        text-decoration: none;
+    }
+
+    .link-button {
+        background: none;
+        border: none;
+        color: #006E44;
+        /* FEU green */
+        padding: 0;
+        margin: 0;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .link-button:hover {
+        color: #004d3f;
+        /* Slightly darker green */
+        text-decoration: none;
+    }
+
+
+    .tooltip-hover {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .tooltip-hover .custom-tooltip {
+        visibility: hidden;
+        opacity: 0;
+        width: max-content;
+        max-width: 300px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        padding: 8px 12px;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 10;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: opacity 0.3s;
+        white-space: pre-wrap;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        font-size: 0.85rem;
+        line-height: 1.2;
+    }
+
+    .tooltip-hover:hover .custom-tooltip {
+        visibility: visible;
+        opacity: 1;
+    }
+
+
     .modern-table {
         width: 100%;
         border-collapse: separate;
@@ -10,7 +76,7 @@
     }
 
     .modern-table thead {
-        background: linear-gradient(to right, #38b000, rgb(84, 160, 7));
+        background: #006E44;
         color: #fff;
     }
 
@@ -70,26 +136,27 @@
         border: none;
     }
 </style>
-<div class="top-navbar">
-    <img src="{{ asset('images/logoo.png') }}" alt="" class="logo-nav">
-    <div class="user-greeting">
-        @if(Auth::check())
-        Hello, {{ Auth::user()->first_name }}
-        @else
-        Hello, Guest
-        @endif
-    </div>
-</div>
-
-<div class="main-wrapper">
+<div class="page-wrapper d-flex">
     @include('layout.sidebar')
+    <div class="content-wrapper flex-grow-1 d-flex flex-column">
+        <div class="top-navbar">
+            <div class="mx-auto">
+                <img src="{{ asset('images/name_logo.png') }}" alt="" class="logo-nav">
+            </div>
+            <div class="user-greeting">
+                Hello, {{ Auth::user()->first_name }}
+            </div>
+        </div>
 
-    <div class="main-content">
-            
-                <div class="card-header  text-black d-flex justify-content-between align-items-center"style="padding-bottom: 1.5rem;">
-                    <h4 class="mb-0">Incident Reports</h4>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
-                        <i class="fas fa-plus"></i> Add Incident
+        <div class="main-wrapper">
+
+
+            <div class="main-content">
+
+                <div class="card-header  text-black d-flex justify-content-between align-items-center" style="padding-bottom: 1.5rem;">
+                    <h4 class="mb-0 fw-bold fs-3">Incident Reports</h4>
+                    <button type="button" class="btn text-dark fw-bold" style="background-color: #FFD100; border: none;" data-bs-toggle="modal" data-bs-target="#addIncidentModal">
+                        <i class="fas fa-plus"></i> Add
                     </button>
                 </div>
                 <div class="card-body">
@@ -107,11 +174,9 @@
                                 <option value="Teacher" {{ request('reporter_role') == 'Teacher' ? 'selected' : '' }}>Teacher</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex justify-content-between">
-                            <div>
-                                <button type="submit" class="btn btn-danger me-1">Filter</button>
-                                <a href="{{ route('incidents.index') }}" class="btn btn-secondary">Clear</a>
-                            </div>
+                        <div class="col-md-3 d-flex align-items-end gap-3">
+                            <button type="submit" class="link-button">Filter</button>
+                            <a href="{{ route('incidents.index') }}" class="link-button">Clear</a>
                         </div>
                     </form>
 
@@ -140,7 +205,10 @@
                                 @foreach($incidents as $incident)
                                 <tr>
                                     <td>{{ $incident->ticket_no }}</td>
-                                    <td>{{ $incident->incident }}</td>
+                                    <td class="tooltip-hover">
+                                        {{ \Illuminate\Support\Str::limit($incident->incident, 15, '...') }}
+                                        <span class="custom-tooltip">{{ $incident->incident }}</span>
+                                    </td>
                                     <td>{{ $incident->reporter_name }}</td>
                                     <td>{{ $incident->date_reported }}</td>
                                     <td>
@@ -152,7 +220,8 @@
                                         {{ $incident->status }}
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-warning me-1"
+                                        <button type="button"
+                                            class="text-button text-primary me-3"
                                             data-bs-toggle="modal" data-bs-target="#editIncidentModal"
                                             data-id="{{ $incident->id }}"
                                             data-incident="{{ $incident->incident }}"
@@ -162,14 +231,18 @@
                                             data-status="{{ $incident->status }}">
                                             Edit
                                         </button>
-                                        <form action="{{ route('incidents.destroy', $incident->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
+
+                                        <form action="{{ route('incidents.destroy', $incident->id) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirmDelete(this)">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash-alt"></i> Delete
-                                            </button>
+                                            <button type="submit" class="text-button text-danger fw-bold">Delete</button>
                                         </form>
                                     </td>
+
+
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -177,110 +250,111 @@
                     </div>
                     {{ $incidents->withQueryString()->links() }}
                 </div>
-            
-        
+
+
+            </div>
+        </div>
+
+        <!-- Add Modal -->
+        <div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('incidents.store') }}" class="modal-content">
+                    @csrf
+                    <input type="hidden" name="_modal" value="add">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Incident Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="ticket_no" value="{{ 'INC-' . strtoupper(uniqid()) }}"> <!-- ✅ Required -->
+
+                        <div class="mb-3">
+                            <label class="form-label">Incident Description</label>
+                            <textarea name="incident" class="form-control" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reporter Name</label>
+                            <input type="text" name="reporter_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date Reported</label>
+                            <input type="date" name="date_reported" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reporter Role</label>
+                            <select name="reporter_role" class="form-select" required>
+                                <option value="Student">Student</option>
+                                <option value="Associates">Associates</option>
+                                <option value="Security">Security</option>
+                                <option value="SFU">SFU</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Complete">Complete</option>
+                            </select>
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-danger">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editIncidentModal" tabindex="-1" aria-labelledby="editIncidentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" id="editIncidentForm" class="modal-content">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="_modal" value="edit">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Incident</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Incident Description</label>
+                            <textarea name="incident" class="form-control" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reporter Name</label>
+                            <input type="text" name="reporter_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date Reported</label>
+                            <input type="date" name="date_reported" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reporter Role</label>
+                            <select name="reporter_role" class="form-select" required>
+                                <option value="Student">Student</option>
+                                <option value="Associates">Associates</option>
+                                <option value="Security">Security</option>
+                                <option value="SFU">SFU</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Complete">Complete</option>
+                            </select>
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-danger">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
-
-<!-- Add Modal -->
-<div class="modal fade" id="addIncidentModal" tabindex="-1" aria-labelledby="addIncidentModalLabel" aria-hidden="true"> 
-    <div class="modal-dialog">
-        <form method="POST" action="{{ route('incidents.store') }}" class="modal-content">
-            @csrf
-            <input type="hidden" name="_modal" value="add">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Incident Report</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" name="ticket_no" value="{{ 'INC-' . strtoupper(uniqid()) }}"> <!-- ✅ Required -->
-
-                <div class="mb-3">
-                    <label class="form-label">Incident Description</label>
-                    <textarea name="incident" class="form-control" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reporter Name</label>
-                    <input type="text" name="reporter_name" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Date Reported</label>
-                    <input type="date" name="date_reported" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reporter Role</label>
-                    <select name="reporter_role" class="form-select" required>
-                        <option value="Student">Student</option>
-                        <option value="Associates">Associates</option>
-                        <option value="Security">Security</option>
-                        <option value="SFU">SFU</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Complete">Complete</option>
-                    </select>
-                </div>
-                <div class="text-end">
-                    <button class="btn btn-danger">Submit</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editIncidentModal" tabindex="-1" aria-labelledby="editIncidentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="POST" id="editIncidentForm" class="modal-content">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="_modal" value="edit">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Incident</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Incident Description</label>
-                    <textarea name="incident" class="form-control" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reporter Name</label>
-                    <input type="text" name="reporter_name" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Date Reported</label>
-                    <input type="date" name="date_reported" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reporter Role</label>
-                    <select name="reporter_role" class="form-select" required>
-                        <option value="Student">Student</option>
-                        <option value="Associates">Associates</option>
-                        <option value="Security">Security</option>
-                        <option value="SFU">SFU</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Complete">Complete</option>
-                    </select>
-                </div>
-                <div class="text-end">
-                    <button class="btn btn-danger">Update</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const modalError = document.getElementById('modalError')?.value;
@@ -317,6 +391,26 @@
             form.querySelector('[name="status"]').value = button.getAttribute('data-status');
         });
     });
+
+    function confirmDelete(form) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This report will be permanently deleted.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        return false;
+    }
 </script>
 <input type="hidden" id="modalError" value="{{ old('_modal') }}">
 @endsection

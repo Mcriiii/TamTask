@@ -8,10 +8,11 @@ use Illuminate\Notifications\Notifiable;
 
 class Complaint extends Model
 {
-   use HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'ticket_no',
+        'user_id',
         'reporter_name',
         'student_no',
         'date_reported',
@@ -20,4 +21,9 @@ class Complaint extends Model
         'meeting_schedule',
         'status',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

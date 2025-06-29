@@ -33,6 +33,44 @@ $major = [
 <input type="hidden" id="modalError" value="{{ old('_modal') }}">
 
 <style>
+    .text-button {
+        background: none;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.9rem;
+        text-decoration: underline;
+    }
+
+    .text-button:hover {
+        opacity: 0.8;
+        text-decoration: none;
+    }
+
+    .link-button {
+        background: none;
+        border: none;
+        color: #006E44;
+        /* FEU green */
+        padding: 0;
+        margin: 0;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .link-button:hover {
+        color: #004d3f;
+        /* Slightly darker green */
+        text-decoration: none;
+    }
+
+    .tooltip-hover {
+        position: relative;
+        cursor: pointer;
+    }
+
     .modern-table {
         width: 100%;
         border-collapse: separate;
@@ -41,7 +79,7 @@ $major = [
     }
 
     .modern-table thead {
-        background: linear-gradient(to right, #38b000, rgb(84, 160, 7));
+        background: #006E44;
         color: #fff;
     }
 
@@ -101,456 +139,478 @@ $major = [
         border: none;
     }
 </style>
-
-<div class="top-navbar">
-    <img src="{{ asset('images/logoo.png') }}" class="logo-nav" alt="">
-    <div class="user-greeting">Hello, {{ Auth::user()->first_name }}</div>
-</div>
-
-<div class="main-wrapper">
+<div class="page-wrapper d-flex">
     @include('layout.sidebar')
-    <div class="main-content">
-
-        <div class="card-header  text-black d-flex justify-content-between align-items-center" style="padding-bottom: 1.5rem;">
-            <h4 class="mb-0">Violation Reports</h4>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addViolationModal">
-                <i class="fas fa-plus"></i> Add Violation
-            </button>
-        </div>
-        <div class="card-body">
-            @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="content-wrapper flex-grow-1 d-flex flex-column">
+        <div class="top-navbar">
+            <div class="mx-auto">
+                <img src="{{ asset('images/name_logo.png') }}" alt="" class="logo-nav">
             </div>
-            @endif
-            <form method="GET" action="{{ route($routePrefix . 'violations.index') }}" class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search name or offense">
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="date_reported" class="form-control" value="{{ request('date_reported') }}">
-                </div>
-                <div class="col-md-3">
-                    <select name="status" class="form-select">
-                        <option value="">-- Status --</option>
-                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Complete" {{ request('status') == 'Complete' ? 'selected' : '' }}>Complete</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-danger">Filter</button>
-                </div>
-            </form>
-
-            <div class="modern-table-container">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Violation No</th>
-                            <th>Reported By</th>
-                            <th>Student No</th>
-                            <th>Offense</th>
-                            <th>Level</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Taken Action</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($violations as $v)
-                        <tr>
-                            <td>{{ $v->violation_no }}</td>
-                            <td>
-                                @if($v->user)
-                                {{ $v->user->first_name }} {{ $v->user->last_name }}
-                                @else
-                                <span class="text-muted">N/A</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="#"
-                                    class="student-link"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#studentDetailsModal"
-                                    data-studentno="{{ $v->student_no }}"
-                                    data-fullname="{{ $v->full_name }}"
-                                    data-email="{{ $v->student_email }}"
-                                    data-yearlvl="{{ $v->yearlvl_degree }}"
-                                    data-totalminors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_minors }}"
-                                    data-pendingminors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_minors }}"
-                                    data-totalmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_majors }}"
-                                    data-pendingmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_majors }}">
-                                    {{ $v->student_no }}
-                                </a>
-                            </td>
-                            <td>{{ $v->offense }}</td>
-                            <td>{{ $v->level }}</td>
-                            <td class="text-{{ $v->status == 'Complete' ? 'primary' : 'danger' }}">{{ $v->status }}</td>
-                            <td>{{ $v->date_reported }}</td>
-                            <td>@include('admin.takeaction_case', ['violation' => $v, 'prefix' => $prefix])</td>
-                            <td>
-                                <div class="d-flex flex-nowrap align-items-center gap-1 justify-content-center">
-                                    <button type="button"
-                                        class="btn btn-sm btn-warning"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editViolationModal"
-                                        data-id="{{ $v->id }}"
-                                        data-fullname="{{ $v->full_name }}"
-                                        data-email="{{ $v->student_email }}"
-                                        data-studentno="{{ $v->student_no }}"
-                                        data-date="{{ $v->date_reported }}"
-                                        data-degree="{{ $v->yearlvl_degree }}"
-                                        data-offense="{{ $v->offense }}"
-                                        data-action_taken="{{ $v->action_taken }}"
-                                        data-status="{{ $v->status }}">
-                                        Edit
-                                    </button>
-
-                                    <form method="POST"
-                                        action="{{ route($routePrefix . 'violations.destroy', $v->id) }}"
-                                        onsubmit="return confirm('Are you sure?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="9">No violations found.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                @include('admin.summary', ['stats' => $stats])
-                {{ $violations->withQueryString()->links() }}
+            <div class="user-greeting">
+                Hello, {{ Auth::user()->first_name }}
             </div>
         </div>
 
-    </div>
-</div>
+        <div class="main-wrapper">
+            <div class="main-content">
 
-<!-- Add Modal -->
-<div class="modal fade" id="addViolationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="{{ route($prefix . 'violations.store') }}" method="POST" class="modal-content">
-            @csrf
-            <input type="hidden" name="_modal" value="add">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Violation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Error Handling Inside Modal -->
-                @if(old('_modal') === 'add' && $errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="card-header  text-black d-flex justify-content-between align-items-center" style="padding-bottom: 1.5rem;">
+                    <h4 class="mb-0 fw-bold fs-3">Violation Reports</h4>
+                    <button type="button" class="btn text-dark fw-bold" style="background-color: #FFD100; border: none;" data-bs-toggle="modal" data-bs-target="#addViolationModal">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
                 </div>
-                @endif
-
-                <!-- Form Fields -->
-                <input type="hidden" name="violation_no" value="{{ 'VIO-' . strtoupper(uniqid()) }}">
-
-                <div class="mb-2">
-                    <label>Full Name</label>
-                    <input name="full_name" class="form-control" value="{{ old('full_name') }}" required>
-                    @if ($errors->has('full_name'))
-                    <span class="text-danger">{{ $errors->first('full_name') }}</span>
+                <div class="card-body">
+                    @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                     @endif
+                    <form method="GET" action="{{ route($routePrefix . 'violations.index') }}" class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search name or offense">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" name="date_reported" class="form-control" value="{{ request('date_reported') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status" class="form-select">
+                                <option value="">-- Status --</option>
+                                <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="Complete" {{ request('status') == 'Complete' ? 'selected' : '' }}>Complete</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end gap-3">
+                            <button type="submit" class="link-button">Filter</button>
+                            <a href="{{ route($routePrefix . 'violations.index') }}" class="link-button">Clear</a>
+                        </div>
+                    </form>
+
+                    <div class="modern-table-container">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Violation No</th>
+                                    <th>Reported By</th>
+                                    <th>Student No</th>
+                                    <th>Offense</th>
+                                    <th>Level</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Taken Action</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($violations as $v)
+                                <tr>
+                                    <td>{{ $v->violation_no }}</td>
+                                    <td>
+                                        @if($v->user)
+                                        {{ $v->user->first_name }} {{ $v->user->last_name }}
+                                        @else
+                                        <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="#"
+                                            class="student-link"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#studentDetailsModal"
+                                            data-studentno="{{ $v->student_no }}"
+                                            data-fullname="{{ $v->full_name }}"
+                                            data-email="{{ $v->student_email }}"
+                                            data-yearlvl="{{ $v->yearlvl_degree }}"
+                                            data-totalminors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_minors }}"
+                                            data-pendingminors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_minors }}"
+                                            data-totalmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->total_majors }}"
+                                            data-pendingmajors="{{ $stats->firstWhere('student_no', $v->student_no)?->pending_majors }}">
+                                            {{ $v->student_no }}
+                                        </a>
+                                    </td>
+                                    <td>{{ $v->offense }}</td>
+                                    <td>{{ $v->level }}</td>
+                                    <td class="text-{{ $v->status == 'Complete' ? 'primary' : 'danger' }}">{{ $v->status }}</td>
+                                    <td>{{ $v->date_reported }}</td>
+                                    <td>@include('admin.takeaction_case', ['violation' => $v, 'prefix' => $prefix])</td>
+                                    <td>
+                                        <div class="d-flex flex-nowrap align-items-center gap-1 justify-content-center">
+                                            <button type="button"
+                                                class="text-button text-primary me-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editViolationModal"
+                                                data-id="{{ $v->id }}"
+                                                data-fullname="{{ $v->full_name }}"
+                                                data-email="{{ $v->student_email }}"
+                                                data-studentno="{{ $v->student_no }}"
+                                                data-date="{{ $v->date_reported }}"
+                                                data-degree="{{ $v->yearlvl_degree }}"
+                                                data-offense="{{ $v->offense }}"
+                                                data-action_taken="{{ $v->action_taken }}"
+                                                data-status="{{ $v->status }}">
+                                                Edit
+                                            </button>
+
+                                            <form action="{{ route($routePrefix . 'violations.destroy', $v->id) }}"
+                                                method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirmDelete(this)">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-button text-danger fw-bold">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="9">No violations found.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        @include('admin.summary', ['stats' => $stats])
+                        {{ $violations->withQueryString()->links() }}
+                    </div>
                 </div>
 
-                <div class="mb-2">
-                    <label>Student No</label>
-                    <input name="student_no" class="form-control" value="{{ old('student_no') }}" required>
-                    @if ($errors->has('student_no'))
-                    <span class="text-danger">{{ $errors->first('student_no') }}</span>
-                    @endif
-                </div>
-
-                <div class="mb-2">
-                    <label>Email</label>
-                    <input type="email" name="student_email" class="form-control" value="{{ old('student_email') }}" required>
-                </div>
-
-                <div class="mb-2">
-                    <label>Date</label>
-                    <input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required>
-                </div>
-
-                <div class="mb-2">
-                    <label>Year & Degree</label>
-                    <select name="yearlvl_degree" class="form-select" required>
-                        <!-- Grade 11 and 12 with strands -->
-                        <optgroup label="Grade 11">
-                            <option value="Grade 11 - ABM" {{ old('yearlvl_degree') == 'Grade 11 - ABM' ? 'selected' : '' }}>Grade 11 - ABM</option>
-                            <option value="Grade 11 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Accountancy</option>
-                            <option value="Grade 11 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Business Administration</option>
-                            <option value="Grade 11 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Information Technology</option>
-                            <option value="Grade 11 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Engineering</option>
-                            <option value="Grade 11 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Health Allied</option>
-                            <option value="Grade 11 - GAS" {{ old('yearlvl_degree') == 'Grade 11 - GAS' ? 'selected' : '' }}>Grade 11 - GAS</option>
-                            <option value="Grade 11 - HUMSS" {{ old('yearlvl_degree') == 'Grade 11 - HUMSS' ? 'selected' : '' }}>Grade 11 - HUMSS</option>
-                            <option value="Grade 11 - Sports Track" {{ old('yearlvl_degree') == 'Grade 11 - Sports Track' ? 'selected' : '' }}>Grade 11 - Sports Track</option>
-                        </optgroup>
-
-                        <optgroup label="Grade 12">
-                            <option value="Grade 12 - ABM" {{ old('yearlvl_degree') == 'Grade 12 - ABM' ? 'selected' : '' }}>Grade 12 - ABM</option>
-                            <option value="Grade 12 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Accountancy</option>
-                            <option value="Grade 12 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Business Administration</option>
-                            <option value="Grade 12 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Information Technology</option>
-                            <option value="Grade 12 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Engineering</option>
-                            <option value="Grade 12 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Health Allied</option>
-                            <option value="Grade 12 - GAS" {{ old('yearlvl_degree') == 'Grade 12 - GAS' ? 'selected' : '' }}>Grade 12 - GAS</option>
-                            <option value="Grade 12 - HUMSS" {{ old('yearlvl_degree') == 'Grade 12 - HUMSS' ? 'selected' : '' }}>Grade 12 - HUMSS</option>
-                            <option value="Grade 12 - Sports Track" {{ old('yearlvl_degree') == 'Grade 12 - Sports Track' ? 'selected' : '' }}>Grade 12 - Sports Track</option>
-                        </optgroup>
-
-                        <!-- College Programs -->
-                        @php
-                        $courses = [
-                        'BS Accountancy',
-                        'BSBA Marketing & Multimedia Design',
-                        'BSBA Financial Management & Business Analytics',
-                        'BSBA Operations & Service Management',
-                        'BS Computer Science (Software Engineering)',
-                        'BSIT (Animation & Game Development)',
-                        'BSIT (Cybersecurity)',
-                        'BSIT (Web & Mobile Applications)',
-                        'BS Psychology',
-                        'BS Tourism Management',
-                        ];
-                        @endphp
-
-                        @foreach($courses as $course)
-                        <optgroup label="{{ $course }}">
-                            @for ($i = 1; $i <= 4; $i++)
-                                @php
-                                $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
-                                $value="$i{$suffix} Year - $course" ;
-                                @endphp
-                                <option value="{{ $value }}" {{ old('yearlvl_degree') == $value ? 'selected' : '' }}>{{ $value }}</option>
-                                @endfor
-                        </optgroup>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-2">
-                    <label>Offense</label>
-                    <select name="offense" class="form-select" required>
-                        <optgroup label="Minor Offenses">
-                            @foreach($minor as $offense)
-                            <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
-                            @endforeach
-                        </optgroup>
-                        <optgroup label="Major Offenses">
-                            @foreach($major as $offense)
-                            <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
-                            @endforeach
-                        </optgroup>
-                    </select>
-                </div>
-
-                <div class="mb-2">
-                    <label>Status</label>
-                    <select name="status" class="form-select" required>
-                        <option value="Pending" {{ old('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Complete" {{ old('status') == 'Complete' ? 'selected' : '' }}>Complete</option>
-                    </select>
-                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger">Submit</button>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
 
-
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editViolationModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Violation Report</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                @if(old('_modal') === 'edit' && $errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
-                <form method="POST" id="editViolationForm"
-                    action="{{ old('_modal') === 'edit' && session('edit_id') ? route($prefix . 'violations.update', session('edit_id')) : '' }}">
+        <!-- Add Modal -->
+        <div class="modal fade" id="addViolationModal" tabindex="-1">
+            <div class="modal-dialog">
+                <form action="{{ route($prefix . 'violations.store') }}" method="POST" class="modal-content">
                     @csrf
-                    @method('PUT')
-                    <input type="hidden" name="_modal" value="edit">
+                    <input type="hidden" name="_modal" value="add">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Violation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Error Handling Inside Modal -->
+                        @if(old('_modal') === 'add' && $errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
 
-                    <div class="mb-3">
-                        <label>Full Name</label>
-                        <input type="text" name="full_name" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('full_name') : '' }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Student Number</label>
-                        <input type="text" name="student_no" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('student_no') : '' }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Student Email</label>
-                        <input type="email" name="student_email" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('student_email') : '' }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Date Reported</label>
-                        <input type="date" name="date_reported" class="form-control"
-                            value="{{ old('_modal') === 'edit' ? old('date_reported') : '' }}" required>
-                    </div>
-                    <div class="mb-2"><label>Year & Degree</label>
-                        <select name="yearlvl_degree" class="form-select" required>
+                        <!-- Form Fields -->
+                        <input type="hidden" name="violation_no" value="{{ 'VIO-' . strtoupper(uniqid()) }}">
 
-                            <!-- Grade 11 -->
-                            <optgroup label="Grade 11">
+                        <div class="mb-2">
+                            <label>Full Name</label>
+                            <input name="full_name" class="form-control" value="{{ old('full_name') }}" required>
+                            @if ($errors->has('full_name'))
+                            <span class="text-danger">{{ $errors->first('full_name') }}</span>
+                            @endif
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Student No</label>
+                            <input name="student_no" class="form-control" value="{{ old('student_no') }}" required>
+                            @if ($errors->has('student_no'))
+                            <span class="text-danger">{{ $errors->first('student_no') }}</span>
+                            @endif
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Email</label>
+                            <input type="email" name="student_email" class="form-control" value="{{ old('student_email') }}" required>
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Date</label>
+                            <input type="date" name="date_reported" class="form-control" value="{{ old('date_reported') }}" required>
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Year & Degree</label>
+                            <select name="yearlvl_degree" class="form-select" required>
+                                <!-- Grade 11 and 12 with strands -->
+                                <optgroup label="Grade 11">
+                                    <option value="Grade 11 - ABM" {{ old('yearlvl_degree') == 'Grade 11 - ABM' ? 'selected' : '' }}>Grade 11 - ABM</option>
+                                    <option value="Grade 11 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Accountancy</option>
+                                    <option value="Grade 11 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 11 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 11 - ABM Specialization - Business Administration</option>
+                                    <option value="Grade 11 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Information Technology</option>
+                                    <option value="Grade 11 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Engineering</option>
+                                    <option value="Grade 11 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 11 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 11 - STEM Specialization - Health Allied</option>
+                                    <option value="Grade 11 - GAS" {{ old('yearlvl_degree') == 'Grade 11 - GAS' ? 'selected' : '' }}>Grade 11 - GAS</option>
+                                    <option value="Grade 11 - HUMSS" {{ old('yearlvl_degree') == 'Grade 11 - HUMSS' ? 'selected' : '' }}>Grade 11 - HUMSS</option>
+                                    <option value="Grade 11 - Sports Track" {{ old('yearlvl_degree') == 'Grade 11 - Sports Track' ? 'selected' : '' }}>Grade 11 - Sports Track</option>
+                                </optgroup>
+
+                                <optgroup label="Grade 12">
+                                    <option value="Grade 12 - ABM" {{ old('yearlvl_degree') == 'Grade 12 - ABM' ? 'selected' : '' }}>Grade 12 - ABM</option>
+                                    <option value="Grade 12 - ABM Specialization - Accountancy" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Accountancy' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Accountancy</option>
+                                    <option value="Grade 12 - ABM Specialization - Business Administration" {{ old('yearlvl_degree') == 'Grade 12 - ABM Specialization - Business Administration' ? 'selected' : '' }}>Grade 12 - ABM Specialization - Business Administration</option>
+                                    <option value="Grade 12 - STEM Specialization - Information Technology" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Information Technology' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Information Technology</option>
+                                    <option value="Grade 12 - STEM Specialization - Engineering" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Engineering' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Engineering</option>
+                                    <option value="Grade 12 - STEM Specialization - Health Allied" {{ old('yearlvl_degree') == 'Grade 12 - STEM Specialization - Health Allied' ? 'selected' : '' }}>Grade 12 - STEM Specialization - Health Allied</option>
+                                    <option value="Grade 12 - GAS" {{ old('yearlvl_degree') == 'Grade 12 - GAS' ? 'selected' : '' }}>Grade 12 - GAS</option>
+                                    <option value="Grade 12 - HUMSS" {{ old('yearlvl_degree') == 'Grade 12 - HUMSS' ? 'selected' : '' }}>Grade 12 - HUMSS</option>
+                                    <option value="Grade 12 - Sports Track" {{ old('yearlvl_degree') == 'Grade 12 - Sports Track' ? 'selected' : '' }}>Grade 12 - Sports Track</option>
+                                </optgroup>
+
+                                <!-- College Programs -->
                                 @php
-                                $grade11Strands = [
-                                'ABM',
-                                'ABM Specialization - Accountancy',
-                                'ABM Specialization - Business Administration',
-                                'STEM Specialization - Information Technology',
-                                'STEM Specialization - Engineering',
-                                'STEM Specialization - Health Allied',
-                                'GAS',
-                                'HUMSS',
-                                'Sports Track',
+                                $courses = [
+                                'BS Accountancy',
+                                'BSBA Marketing & Multimedia Design',
+                                'BSBA Financial Management & Business Analytics',
+                                'BSBA Operations & Service Management',
+                                'BS Computer Science (Software Engineering)',
+                                'BSIT (Animation & Game Development)',
+                                'BSIT (Cybersecurity)',
+                                'BSIT (Web & Mobile Applications)',
+                                'BS Psychology',
+                                'BS Tourism Management',
                                 ];
                                 @endphp
-                                @foreach ($grade11Strands as $strand)
-                                @php $value = "Grade 11 - $strand"; @endphp
-                                <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
-                                    {{ $value }}
-                                </option>
+
+                                @foreach($courses as $course)
+                                <optgroup label="{{ $course }}">
+                                    @for ($i = 1; $i <= 4; $i++)
+                                        @php
+                                        $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
+                                        $value="$i{$suffix} Year - $course" ;
+                                        @endphp
+                                        <option value="{{ $value }}" {{ old('yearlvl_degree') == $value ? 'selected' : '' }}>{{ $value }}</option>
+                                        @endfor
+                                </optgroup>
                                 @endforeach
-                            </optgroup>
+                            </select>
+                        </div>
 
-                            <!-- Grade 12 -->
-                            <optgroup label="Grade 12">
-                                @php
-                                $grade12Strands = $grade11Strands;
-                                @endphp
-                                @foreach ($grade12Strands as $strand)
-                                @php $value = "Grade 12 - $strand"; @endphp
-                                <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
-                                    {{ $value }}
-                                </option>
-                                @endforeach
-                            </optgroup>
+                        <div class="mb-2">
+                            <label>Offense</label>
+                            <select name="offense" class="form-select" required>
+                                <optgroup label="Minor Offenses">
+                                    @foreach($minor as $offense)
+                                    <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="Major Offenses">
+                                    @foreach($major as $offense)
+                                    <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
 
-                            <!-- College Courses -->
-                            @php
-                            $courses = [
-                            'BS Accountancy',
-                            'BSBA Marketing & Multimedia Design',
-                            'BSBA Financial Management & Business Analytics',
-                            'BSBA Operations & Service Management',
-                            'BS Computer Science (Software Engineering)',
-                            'BSIT (Animation & Game Development)',
-                            'BSIT (Cybersecurity)',
-                            'BSIT (Web & Mobile Applications)',
-                            'BS Psychology',
-                            'BS Tourism Management',
-                            ];
-                            @endphp
-
-                            @foreach($courses as $course)
-                            <optgroup label="{{ $course }}">
-                                @for ($i = 1; $i <= 4; $i++)
-                                    @php
-                                    $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
-                                    $value="$i{$suffix} Year - $course" ;
-                                    @endphp
-                                    <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
-                                    {{ $value }}
-                                    </option>
-                                    @endfor
-                            </optgroup>
-                            @endforeach
-
-                        </select>
+                        <div class="mb-2">
+                            <label>Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Pending" {{ old('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="Complete" {{ old('status') == 'Complete' ? 'selected' : '' }}>Complete</option>
+                            </select>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label>Action Taken</label>
-                        <select name="action_taken" class="form-select form-select-sm" required>
-                            <option value="" disabled>Select action</option>
-                            <optgroup label="General">
-                                <option value="Warning">Verbal/Written Warning</option>
-                                <option value="Parent/Guardian Conference">Parent/Guardian Conference</option>
-                            </optgroup>
-                            <optgroup label="Sanctions">
-                                <option value="Suspension">Suspension</option>
-                                <option value="Disciplinary Probation">Disciplinary Probation</option>
-                                <option value="DUSAP">DUSAP</option>
-                                <option value="Community Service">Community Service</option>
-                                <option value="Expulsion">Expulsion</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Status</label>
-                        <select name="status" class="form-select" required>
-                            <option value="Pending" {{ old('_modal') === 'edit' && old('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="Complete" {{ old('_modal') === 'edit' && old('status') === 'Complete' ? 'selected' : '' }}>Complete</option>
-                        </select>
-                    </div>
-
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">Update Violation</button>
+                    <div class="modal-footer">
+                        <button class="btn btn-danger">Submit</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Student Details Modal -->
-<div class="modal fade" id="studentDetailsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Student Violation Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editViolationModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Violation Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if(old('_modal') === 'edit' && $errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
+
+                        <form method="POST" id="editViolationForm"
+                            action="{{ old('_modal') === 'edit' && session('edit_id') ? route($prefix . 'violations.update', session('edit_id')) : '' }}">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="_modal" value="edit">
+
+                            <div class="mb-3">
+                                <label>Full Name</label>
+                                <input type="text" name="full_name" class="form-control"
+                                    value="{{ old('_modal') === 'edit' ? old('full_name') : '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Student Number</label>
+                                <input type="text" name="student_no" class="form-control"
+                                    value="{{ old('_modal') === 'edit' ? old('student_no') : '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Student Email</label>
+                                <input type="email" name="student_email" class="form-control"
+                                    value="{{ old('_modal') === 'edit' ? old('student_email') : '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Date Reported</label>
+                                <input type="date" name="date_reported" class="form-control"
+                                    value="{{ old('_modal') === 'edit' ? old('date_reported') : '' }}" required>
+                            </div>
+                            <div class="mb-2"><label>Year & Degree</label>
+                                <select name="yearlvl_degree" class="form-select" required>
+
+                                    <!-- Grade 11 -->
+                                    <optgroup label="Grade 11">
+                                        @php
+                                        $grade11Strands = [
+                                        'ABM',
+                                        'ABM Specialization - Accountancy',
+                                        'ABM Specialization - Business Administration',
+                                        'STEM Specialization - Information Technology',
+                                        'STEM Specialization - Engineering',
+                                        'STEM Specialization - Health Allied',
+                                        'GAS',
+                                        'HUMSS',
+                                        'Sports Track',
+                                        ];
+                                        @endphp
+                                        @foreach ($grade11Strands as $strand)
+                                        @php $value = "Grade 11 - $strand"; @endphp
+                                        <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                        @endforeach
+                                    </optgroup>
+
+                                    <!-- Grade 12 -->
+                                    <optgroup label="Grade 12">
+                                        @php
+                                        $grade12Strands = $grade11Strands;
+                                        @endphp
+                                        @foreach ($grade12Strands as $strand)
+                                        @php $value = "Grade 12 - $strand"; @endphp
+                                        <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                        @endforeach
+                                    </optgroup>
+
+                                    <!-- College Courses -->
+                                    @php
+                                    $courses = [
+                                    'BS Accountancy',
+                                    'BSBA Marketing & Multimedia Design',
+                                    'BSBA Financial Management & Business Analytics',
+                                    'BSBA Operations & Service Management',
+                                    'BS Computer Science (Software Engineering)',
+                                    'BSIT (Animation & Game Development)',
+                                    'BSIT (Cybersecurity)',
+                                    'BSIT (Web & Mobile Applications)',
+                                    'BS Psychology',
+                                    'BS Tourism Management',
+                                    ];
+                                    @endphp
+
+                                    @foreach($courses as $course)
+                                    <optgroup label="{{ $course }}">
+                                        @for ($i = 1; $i <= 4; $i++)
+                                            @php
+                                            $suffix=$i==1 ? 'st' : ($i==2 ? 'nd' : ($i==3 ? 'rd' : 'th' ));
+                                            $value="$i{$suffix} Year - $course" ;
+                                            @endphp
+                                            <option value="{{ $value }}" {{ old('_modal') === 'edit' && old('yearlvl_degree') == $value ? 'selected' : '' }}>
+                                            {{ $value }}
+                                            </option>
+                                            @endfor
+                                    </optgroup>
+                                    @endforeach
+
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Action Taken</label>
+                                <select name="action_taken" class="form-select form-select-sm" required>
+                                    <option value="" disabled>Select action</option>
+                                    <optgroup label="General">
+                                        <option value="Warning">Verbal/Written Warning</option>
+                                        <option value="Parent/Guardian Conference">Parent/Guardian Conference</option>
+                                    </optgroup>
+                                    <optgroup label="Sanctions">
+                                        <option value="Suspension">Suspension</option>
+                                        <option value="Disciplinary Probation">Disciplinary Probation</option>
+                                        <option value="DUSAP">DUSAP</option>
+                                        <option value="Community Service">Community Service</option>
+                                        <option value="Expulsion">Expulsion</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label>Offense</label>
+                                <select name="offense" class="form-select" required>
+                                    <optgroup label="Minor Offenses">
+                                        @foreach($minor as $offense)
+                                        <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="Major Offenses">
+                                        @foreach($major as $offense)
+                                        <option {{ old('offense') == $offense ? 'selected' : '' }}>{{ $offense }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Status</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="Pending" {{ old('_modal') === 'edit' && old('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="Complete" {{ old('_modal') === 'edit' && old('status') === 'Complete' ? 'selected' : '' }}>Complete</option>
+                                </select>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">Update Violation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <p><strong>Student No:</strong> <span id="modalStudentNo"></span></p>
-                <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
-                <p><strong>Email:</strong> <span id="modalStudentEmail"></span></p>
-                <p><strong>Year & Degree:</strong> <span id="modalYearlvl"></span></p>
-                <hr>
-                <p><strong>Total Minors:</strong> <span id="modalTotalMinors"></span></p>
-                <p><strong>Pending Minor Violations:</strong> <span id="modalPendingMinors"></span></p>
-                <p><strong>Resolved Minor Violations:</strong> <span id="modalResolvedMinors"></span></p>
-                <p><strong>Total Majors:</strong> <span id="modalTotalMajors"></span></p>
-                <p><strong>Pending Major Violations:</strong> <span id="modalPendingMajors"></span></p>
-                <p><strong>Resolved Major Violations:</strong> <span id="modalResolvedMajors"></span></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+
+        <!-- Student Details Modal -->
+        <div class="modal fade" id="studentDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Student Violation Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Student No:</strong> <span id="modalStudentNo"></span></p>
+                        <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
+                        <p><strong>Email:</strong> <span id="modalStudentEmail"></span></p>
+                        <p><strong>Year & Degree:</strong> <span id="modalYearlvl"></span></p>
+                        <hr>
+                        <p><strong>Total Minors:</strong> <span id="modalTotalMinors"></span></p>
+                        <p><strong>Pending Minor Violations:</strong> <span id="modalPendingMinors"></span></p>
+                        <p><strong>Resolved Minor Violations:</strong> <span id="modalResolvedMinors"></span></p>
+                        <p><strong>Total Majors:</strong> <span id="modalTotalMajors"></span></p>
+                        <p><strong>Pending Major Violations:</strong> <span id="modalPendingMajors"></span></p>
+                        <p><strong>Resolved Major Violations:</strong> <span id="modalResolvedMajors"></span></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -636,6 +696,26 @@ $major = [
             });
         });
     });
+
+    function confirmDelete(form) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This report will be permanently deleted.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        return false;
+    }
 </script>
 
 

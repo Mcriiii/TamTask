@@ -40,23 +40,37 @@ class ComplaintController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('yearlvl_degree')) {
+            $query->where('yearlvl_degree', $request->yearlvl_degree);
+        }
+
         $complaints = $query->latest()->paginate(10);
 
         $view = $this->getRoutePrefix() === 'admin.' ? 'admin.complaints' : 'complaints';
 
-        return view($view, compact('complaints'));
+        $subjects = Complaint::select('subject')->distinct()->pluck('subject')->sort();
+
+        return view($view, compact('complaints', 'subjects'));
     }
 
     // Store a new complaint
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'reporter_name' => 'required|string|max:255',
-            'student_no' => ['required', 'regex:/^\d{9}$/'],
+            'reporter_name' => ['required', 'regex:/^[\pL\s]+$/u'],
             'date_reported' => 'required|date',
-            'yearlvl_degree' => 'required|string|max:100',
-            'subject' => 'required|string|max:255',
+            'subject' => 'required|string|max:1000',
+            'complaint_role' => 'required|in:student,teacher,security',
         ]);
+
+        // Only require student_no and yearlvl_degree if role is student
+        $validator->sometimes('student_no', ['required', 'regex:/^\d{9}$/'], function ($input) {
+            return $input->complaint_role === 'student';
+        });
+
+        $validator->sometimes('yearlvl_degree', ['required', 'string', 'max:100'], function ($input) {
+            return $input->complaint_role === 'student';
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -68,11 +82,12 @@ class ComplaintController extends Controller
         } while (Complaint::where('ticket_no', $ticketNo)->exists());
 
         Complaint::create([
+            'user_id' => Auth::id(),
             'ticket_no' => $ticketNo,
             'reporter_name' => $request->reporter_name,
-            'student_no' => $request->student_no,
+            'student_no' => $request->complaint_role === 'student' ? $request->student_no : null,
             'date_reported' => $request->date_reported,
-            'yearlvl_degree' => $request->yearlvl_degree,
+            'yearlvl_degree' => $request->complaint_role === 'student' ? $request->yearlvl_degree : null,
             'subject' => $request->subject,
             'status' => 'Pending',
         ]);
@@ -100,26 +115,36 @@ class ComplaintController extends Controller
         $complaint = Complaint::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'reporter_name' => 'required|string|max:255',
-            'student_no' => ['required', 'regex:/^\d{9}$/'],
-            'date_reported' => 'required|date',
-            'yearlvl_degree' => 'required|string|max:100',
-            'subject' => 'required|string|max:255',
-            'meeting_schedule' => 'nullable|date',
-            'status' => 'nullable|string',
+            'reporter_name' => ['required', 'string', 'max:255'],
+            'date_reported' => ['required', 'date'],
+            'subject' => ['required', 'string', 'max:255'],
+            'meeting_schedule' => ['nullable', 'date'],
+            'status' => ['nullable', 'string'],
+            'complaint_role' => ['required', 'in:student,teacher,security'],
         ]);
+
+        $validator->sometimes('student_no', ['required', 'regex:/^\d{9}$/'], function ($input) {
+            return $input->complaint_role === 'student';
+        });
+
+        $validator->sometimes('yearlvl_degree', ['required', 'string', 'max:100'], function ($input) {
+            return $input->complaint_role === 'student';
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
-                ->withInput($request->all() + ['_modal' => 'edit'])
+                ->withInput($request->all() + [
+                    '_modal' => 'edit',
+                    'id' => $id // ✅ Include the complaint ID so the Blade can regenerate the correct action URL
+                ])
                 ->withErrors($validator);
         }
 
         // Manually update fields
         $complaint->reporter_name = $request->reporter_name;
-        $complaint->student_no = $request->student_no;
+        $complaint->student_no = $request->complaint_role === 'student' ? $request->student_no : null;
         $complaint->date_reported = $request->date_reported;
-        $complaint->yearlvl_degree = $request->yearlvl_degree;
+        $complaint->yearlvl_degree = $request->complaint_role === 'student' ? $request->yearlvl_degree : null;
         $complaint->subject = $request->subject;
 
         // Handle meeting_schedule

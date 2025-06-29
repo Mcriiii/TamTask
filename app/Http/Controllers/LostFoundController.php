@@ -21,8 +21,13 @@ class LostFoundController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('reporter_name', 'like', "%{$search}%")
                     ->orWhere('ticket_no', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");;
             });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         if ($request->filled('item_type')) {
@@ -44,7 +49,8 @@ class LostFoundController extends Controller
             'date_reported' => 'required|date',
             'location_found' => 'nullable|string|max:255',
             'item_type' => 'required|string|max:100',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'required|string|max:1000',
+            'custom_item_type' => 'required|required_if:item_type,Others|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -59,13 +65,17 @@ class LostFoundController extends Controller
             $ticketNo = $prefix . '-' . rand(1000, 9999);
         } while (LostFound::where('ticket_no', $ticketNo)->exists());
 
+        $itemType = $request->item_type === 'Others' && $request->filled('custom_item_type')
+            ? $request->custom_item_type
+            : $request->item_type;
+
         LostFound::create([
             'ticket_no' => $ticketNo,
             'reporter_name' => $request->reporter_name,
             'email' => $request->email,
             'date_reported' => $request->date_reported,
             'location_found' => $request->location_found,
-            'item_type' => $request->item_type,
+            'item_type' => $itemType,
             'description' => $request->description,
             'status' => $request->report_type === 'FND' ? 'Unclaimed' : 'Searching',
         ]);
@@ -85,7 +95,9 @@ class LostFoundController extends Controller
             'location_found' => 'nullable|string|max:255',
             'item_type' => 'required|string|max:100',
             'description' => 'required|string|max:1000',
-            'status' => 'required|in:Item Stored,Claimed,Unclaimed,Searching,Found,Returned,Closed',
+            'custom_item_type' => 'required_if:item_type,Others|nullable|string|max:100',
+            'status' => 'required|in:Item Stored,Claimed,Unclaimed,Searching,Found,Returned,Closed,Disposed',
+
         ]);
 
         if ($validator->fails()) {
@@ -96,7 +108,12 @@ class LostFoundController extends Controller
                 ->with('edit_id', $id);
         }
 
-        $report->update($validator->validated());
+        $data = $validator->validated();
+        $data['item_type'] = $request->item_type === 'Others' && $request->filled('custom_item_type')
+            ? $request->custom_item_type
+            : $request->item_type;
+
+        $report->update($data);
 
         return redirect()->route($this->getRoutePrefix() . 'lost-found.index')
             ->with('success', 'Report updated successfully.');

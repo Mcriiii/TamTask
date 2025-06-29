@@ -56,6 +56,7 @@ class IncidentController extends Controller
         $data = $request->all();
         $data['ticket_no'] = $ticketNo;
         $data['level'] = (new Incident($data))->level; // auto-compute level
+        $data['user_id'] = Auth::id();
         Incident::create($data);
 
         return redirect()->route($this->getRoutePrefix() . 'incidents.index')
@@ -83,6 +84,7 @@ class IncidentController extends Controller
         $data = $request->all();
         $data['level'] = (new Incident($data))->level;
         $incident->update($data);
+        
 
         return redirect()->route($this->getRoutePrefix() . 'incidents.index')
             ->with('success', 'Incident updated.');

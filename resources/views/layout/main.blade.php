@@ -20,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   @stack('scripts')
   <script>
     setInterval(() => {
@@ -32,7 +33,7 @@
         }).catch(err => {
           console.error("Session check failed", err);
         });
-    }, 10000); // every 10 seconds
+    }, 10000); 
 
 
     let idleTime = 0;
@@ -42,7 +43,7 @@
       idleTime = 0;
     }
 
-    // Reset idle timer on any user interaction
+    
     window.onload = resetIdleTime;
     window.onmousemove = resetIdleTime;
     window.onkeypress = resetIdleTime;
@@ -50,7 +51,7 @@
     window.onmousedown = resetIdleTime;
     window.ontouchstart = resetIdleTime;
 
-    // Check every 1 minute
+    
     setInterval(() => {
       idleTime++;
       if (idleTime >= maxIdleMinutes) {
@@ -64,7 +65,7 @@
           window.location.href = '/login';
         });
       }
-    }, 60000); // 60,000 ms = 1 minute
+    }, 60000); 
   </script>
 </body>
 

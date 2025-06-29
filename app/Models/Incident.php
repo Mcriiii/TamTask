@@ -15,6 +15,7 @@ class Incident extends Model
 
     protected $fillable = [
         'ticket_no',
+        'user_id',
         'incident',
         'reporter_name',
         'level',
@@ -23,6 +24,11 @@ class Incident extends Model
         'status',
     ];
     protected $dates = ['date_reported'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Keyword pools for determining incident level (English + Tagalog).
@@ -86,6 +92,7 @@ class Incident extends Model
             'yelling',
             'cheating',
             'bullying',
+            'bully',
             'late pumasok',
             'maingay',
             'nang-aasar',

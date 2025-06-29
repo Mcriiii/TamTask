@@ -12,6 +12,8 @@ return new class extends Migration {
     {
         Schema::create('referrals', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('referral_no')->unique();
             $table->dateTime('date_reported');
             $table->string('level');

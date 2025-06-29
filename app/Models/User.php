@@ -26,6 +26,11 @@ class User extends Authenticatable
         'role',
     ];
 
+    public function getStudentNoAttribute()
+    {
+        return substr($this->email, 0, 9);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
